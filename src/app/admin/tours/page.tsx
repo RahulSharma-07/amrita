@@ -6,6 +6,7 @@ import { MapPin, Plus, Save, X, Trash2, Edit, Search, Bus, Camera } from 'lucide
 import Modal from '@/components/ui/Modal';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import { uniqueId } from '@/lib/utils';
 
 interface Tour {
   _id: string;
@@ -34,6 +35,7 @@ export default function ToursPage() {
     image: '',
   });
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     const saved = localStorage.getItem('tours');
     if (saved) setTours(JSON.parse(saved));
@@ -62,7 +64,7 @@ export default function ToursPage() {
       setEditingTour(null);
     } else {
       const newTour: Tour = {
-        _id: Date.now().toString(),
+        _id: uniqueId(),
         ...tourData,
       };
       setTours([...tours, newTour]);

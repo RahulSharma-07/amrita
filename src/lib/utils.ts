@@ -57,6 +57,10 @@ export function truncateText(text: string, maxLength: number): string {
   return text.slice(0, maxLength) + '...';
 }
 
+export function uniqueId(): string {
+  return `_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+}
+
 export function slugify(text: string): string {
   return text
     .toLowerCase()

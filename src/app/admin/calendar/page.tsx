@@ -6,9 +6,10 @@ import { Calendar as CalendarIcon, Plus, Save, X, Trash2, Edit, Search, Clock } 
 import Modal from '@/components/ui/Modal';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import { uniqueId } from '@/lib/utils';
 
 // wrapper used for fields where we intentionally omit the `label` prop
-const UncheckedInput: any = Input;
+const UncheckedInput = Input as React.FC<any>;
 
 interface CalendarEvent {
   _id: string;
@@ -37,6 +38,7 @@ export default function CalendarPage() {
     description: '',
   });
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     const saved = localStorage.getItem('calendarEvents');
     if (saved) setEvents(JSON.parse(saved));
@@ -56,7 +58,7 @@ export default function CalendarPage() {
       setEditingEvent(null);
     } else {
       const newEvent: CalendarEvent = {
-        _id: Date.now().toString(),
+        _id: uniqueId(),
         ...formData,
       };
       setEvents([...events, newEvent]);
@@ -196,7 +198,7 @@ export default function CalendarPage() {
         <div className="bg-white rounded-lg shadow p-8 text-center">
           <CalendarIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">No Events</h3>
-          <p className="text-gray-500 mb-4">Click "Add Event" to create calendar events.</p>
+          <p className="text-gray-500 mb-4">Click &quot;Add Event&quot; to create calendar events.</p>
           <Button onClick={() => setIsModalOpen(true)}>Add First Event</Button>
         </div>
       ) : (

@@ -6,6 +6,7 @@ import { FileText, Plus, Save, X, Trash2, Download, Edit, Search, Upload, Folder
 import Modal from '@/components/ui/Modal';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import { uniqueId } from '@/lib/utils';
 
 interface Document {
   _id: string;
@@ -35,6 +36,7 @@ export default function DocumentsPage() {
     fileName: '',
   });
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     const saved = localStorage.getItem('documents');
     if (saved) setDocuments(JSON.parse(saved));
@@ -54,7 +56,7 @@ export default function DocumentsPage() {
       setEditingDoc(null);
     } else {
       const newDoc: Document = {
-        _id: Date.now().toString(),
+        _id: uniqueId(),
         ...formData,
         uploadedAt: new Date().toISOString(),
       };
@@ -204,7 +206,7 @@ export default function DocumentsPage() {
         <div className="bg-white rounded-lg shadow p-8 text-center">
           <Folder className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">No Documents</h3>
-          <p className="text-gray-500 mb-4">Click "Upload Document" to add documents.</p>
+          <p className="text-gray-500 mb-4">Click &quot;Upload Document&quot; to add documents.</p>
           <Button onClick={() => setIsModalOpen(true)}>Upload First Document</Button>
         </div>
       ) : (

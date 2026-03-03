@@ -6,6 +6,7 @@ import { Bell, Plus, Save, X, Trash2, Edit, Search, Megaphone, AlertCircle } fro
 import Modal from '@/components/ui/Modal';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import { uniqueId } from '@/lib/utils';
 
 interface Notice {
   _id: string;
@@ -35,6 +36,7 @@ export default function NoticesPage() {
     priority: 'Normal',
   });
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     const saved = localStorage.getItem('notices');
     if (saved) setNotices(JSON.parse(saved));
@@ -54,7 +56,7 @@ export default function NoticesPage() {
       setEditingNotice(null);
     } else {
       const newNotice: Notice = {
-        _id: Date.now().toString(),
+        _id: uniqueId(),
         ...formData,
         createdAt: new Date().toISOString(),
       };
@@ -191,7 +193,7 @@ export default function NoticesPage() {
         <div className="bg-white rounded-lg shadow p-8 text-center">
           <Bell className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">No Notices</h3>
-          <p className="text-gray-500 mb-4">Click "Add Notice" to create your first notice.</p>
+          <p className="text-gray-500 mb-4">Click &quot;Add Notice&quot; to create your first notice.</p>
           <Button onClick={() => setIsModalOpen(true)}>Add First Notice</Button>
         </div>
       ) : (

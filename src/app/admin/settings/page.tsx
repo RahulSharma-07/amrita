@@ -34,6 +34,7 @@ export default function SettingsPage() {
     logo: '',
   });
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     const saved = localStorage.getItem('schoolSettings');
     if (saved) {

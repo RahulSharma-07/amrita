@@ -6,6 +6,7 @@ import { GraduationCap, Plus, Save, X, Edit, Trash2, Search, Filter } from 'luci
 import Modal from '@/components/ui/Modal';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import { uniqueId } from '@/lib/utils';
 
 interface Student {
   id: string;
@@ -35,6 +36,7 @@ export default function StudentsPage() {
   });
 
   // Load from localStorage
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     const saved = localStorage.getItem('students');
     if (saved) {
@@ -62,7 +64,7 @@ export default function StudentsPage() {
     } else {
       // Add new
       const newStudent: Student = {
-        id: Date.now().toString(),
+        id: uniqueId(),
         ...formData,
         admissionDate: new Date().toISOString(),
         status: 'Active',
@@ -196,7 +198,7 @@ export default function StudentsPage() {
         <div className="bg-white rounded-lg shadow p-8 text-center">
           <GraduationCap className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">No Students Yet</h3>
-          <p className="text-gray-500 mb-4">Click "Add Student" to add your first student.</p>
+          <p className="text-gray-500 mb-4">Click &quot;Add Student&quot; to add your first student.</p>
           <Button onClick={() => setIsModalOpen(true)}>Add First Student</Button>
         </div>
       ) : (

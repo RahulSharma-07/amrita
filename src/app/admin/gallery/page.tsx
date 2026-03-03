@@ -6,6 +6,7 @@ import { ImageIcon, Plus, Save, X, Trash2, Edit, Search, Camera, FolderOpen } fr
 import Modal from '@/components/ui/Modal';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import { uniqueId } from '@/lib/utils';
 
 interface GalleryAlbum {
   _id: string;
@@ -36,6 +37,7 @@ export default function GalleryPage() {
     coverImage: '',
   });
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     const saved = localStorage.getItem('galleryAlbums');
     if (saved) setAlbums(JSON.parse(saved));
@@ -55,7 +57,7 @@ export default function GalleryPage() {
       setEditingAlbum(null);
     } else {
       const newAlbum: GalleryAlbum = {
-        _id: Date.now().toString(),
+        _id: uniqueId(),
         ...formData,
         images: formData.coverImage ? [formData.coverImage] : [],
         createdAt: new Date().toISOString(),
@@ -201,7 +203,7 @@ export default function GalleryPage() {
         <div className="bg-white rounded-lg shadow p-8 text-center">
           <FolderOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">No Albums</h3>
-          <p className="text-gray-500 mb-4">Click "Add Album" to create gallery albums.</p>
+          <p className="text-gray-500 mb-4">Click &quot;Add Album&quot; to create gallery albums.</p>
           <Button onClick={() => setIsModalOpen(true)}>Add First Album</Button>
         </div>
       ) : (

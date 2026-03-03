@@ -20,14 +20,14 @@ import {
     FileText
 } from 'lucide-react';
 import Link from 'next/link';
-import { calculateAge } from '@/lib/utils'; // if calculateAge exists
+import { IAdmission } from '@/models/admission';
 
 export default function AdmissionDetailPage() {
     const params = useParams();
     const router = useRouter();
     const id = params.id as string;
 
-    const [admission, setAdmission] = useState<any>(null);
+    const [admission, setAdmission] = useState<IAdmission | null>(null);
     const [loading, setLoading] = useState(true);
     const [isUpdating, setIsUpdating] = useState(false);
     const [error, setError] = useState('');
@@ -46,7 +46,7 @@ export default function AdmissionDetailPage() {
             } else {
                 setError(data.error || 'Failed to load admission details');
             }
-        } catch (err) {
+        } catch (_err) {
             setError('An error occurred while fetching admission details');
         } finally {
             setLoading(false);
@@ -67,7 +67,7 @@ export default function AdmissionDetailPage() {
             } else {
                 alert(data.error || 'Failed to update status');
             }
-        } catch (err) {
+        } catch (_err) {
             alert('Error updating status');
         } finally {
             setIsUpdating(false);
@@ -88,7 +88,7 @@ export default function AdmissionDetailPage() {
                 alert(data.error || 'Failed to delete application');
                 setIsUpdating(false);
             }
-        } catch (err) {
+        } catch (_err) {
             alert('Error deleting application');
             setIsUpdating(false);
         }

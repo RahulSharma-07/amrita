@@ -6,6 +6,7 @@ import { IndianRupee, Plus, Save, X, Trash2, Edit, Search } from 'lucide-react';
 import Modal from '@/components/ui/Modal';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import { uniqueId } from '@/lib/utils';
 
 interface Fee {
   _id: string;
@@ -31,6 +32,7 @@ export default function FeesPage() {
     otherCharges: '',
   });
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     const saved = localStorage.getItem('fees');
     if (saved) setFees(JSON.parse(saved));
@@ -57,7 +59,7 @@ export default function FeesPage() {
       setEditingFee(null);
     } else {
       const newFee: Fee = {
-        _id: Date.now().toString(),
+        _id: uniqueId(),
         ...formData,
         total,
       };
@@ -168,7 +170,7 @@ export default function FeesPage() {
         <div className="bg-white rounded-lg shadow p-8 text-center">
           <IndianRupee className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">No Fee Records</h3>
-          <p className="text-gray-500 mb-4">Click "Add Fee Structure" to add fee details.</p>
+          <p className="text-gray-500 mb-4">Click &quot;Add Fee Structure&quot; to add fee details.</p>
           <Button onClick={() => setIsModalOpen(true)}>Add First Fee Structure</Button>
         </div>
       ) : (

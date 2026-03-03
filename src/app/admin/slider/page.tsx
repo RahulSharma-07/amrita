@@ -34,7 +34,7 @@ export default function HeroSliderAdmin() {
           const parsed = JSON.parse(savedSlides);
           if (Array.isArray(parsed) && parsed.length > 0) {
             // Ensure all slides have required fields
-            const normalizedSlides = parsed.map((slide: any) => ({
+            const normalizedSlides = parsed.map((slide: Slide) => ({
               ...slide,
               displayOrder: slide.displayOrder ?? 0,
               status: slide.status ?? 'active',
@@ -71,7 +71,7 @@ export default function HeroSliderAdmin() {
     };
   }, []);
 
-  const setDefaultSlides = () => {
+  function setDefaultSlides() {
     const now = new Date().toISOString();
     setSlides([
       {

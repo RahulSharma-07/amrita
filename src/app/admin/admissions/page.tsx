@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Users, Search, SlidersHorizontal, ChevronDown, Plus, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { IAdmission } from '@/models/admission';
 
 export default function AdmissionsPage() {
   const [admissions, setAdmissions] = useState([]);
@@ -110,15 +111,15 @@ export default function AdmissionsPage() {
                     <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Application ID</th>
                     <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Student Name</th>
                     <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Class</th>
-                    <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Father's Phone</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Father&#39;s Phone</th>
                     <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Submission Date</th>
                     <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Status</th>
                     <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {admissions.map((admission: any) => (
-                    <tr key={admission._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                  {admissions.map((admission: IAdmission) => (
+                    <tr key={String(admission._id)} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
                       <td className="px-6 py-4 text-sm font-medium text-slate-400">#{admission.uniqueApplicationID}</td>
                       <td className="px-6 py-4 text-sm font-semibold text-slate-900 dark:text-white">
                         {admission.studentDetails?.firstName} {admission.studentDetails?.lastName}
