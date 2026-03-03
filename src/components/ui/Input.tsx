@@ -1,40 +1,141 @@
-'use client';
-
-import { cn } from '@/lib/utils';
-import { InputHTMLAttributes, forwardRef } from 'react';
+import React, { InputHTMLAttributes, FC } from "react";
+import styled from "styled-components";
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
-  label?: string;
+  label: string;
   error?: string;
-  helperText?: string;
 }
 
-const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ className, label, error, helperText, ...props }, ref) => {
-    return (
-      <div className="w-full">
-        {label && (
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            {label}
-            {props.required && <span className="text-red-500 ml-1">*</span>}
-          </label>
-        )}
+const Input: FC<InputProps> = ({
+  label,
+  error,
+  id,
+  required,
+  ...props
+}) => {
+  const inputId = id || label.replace(/\s+/g, "-").toLowerCase();
+
+  return (
+    <StyledWrapper>
+      <div className={`wave-group ${error ? "error" : ""}`}>
         <input
-          ref={ref}
-          className={cn(
-            'w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200',
-            error ? 'border-red-500 focus:ring-red-500' : 'border-gray-300',
-            className
-          )}
+          id={inputId}
+          required={required}
+          className="input"
           {...props}
         />
-        {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
-        {helperText && !error && <p className="mt-1 text-sm text-gray-500">{helperText}</p>}
-      </div>
-    );
-  }
-);
 
-Input.displayName = 'Input';
+        <span className="bar" />
+
+        <label htmlFor={inputId} className="label">
+          {label.split("").map((char, index) => (
+            <span
+              key={index}
+              className="label-char"
+              style={
+                { "--index": index } as React.CSSProperties
+              }
+            >
+              {char === " " ? "\u00A0" : char}
+            </span>
+          ))}
+        </label>
+      </div>
+
+      {error && <span className="error-text">{error}</span>}
+    </StyledWrapper>
+  );
+};
+
+const StyledWrapper = styled.div`
+  width: 100%;
+
+  .wave-group {
+    position: relative;
+    width: 100%;
+  }
+
+  .input {
+    font-size: 16px;
+    padding: 10px 10px 10px 5px;
+    display: block;
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid #515151;
+    background: transparent;
+  }
+
+  .input:focus {
+    outline: none;
+  }
+
+  .label {
+    color: #999;
+    font-size: 18px;
+    position: absolute;
+    pointer-events: none;
+    left: 5px;
+    top: 10px;
+    display: flex;
+  }
+
+  .label-char {
+    transition: 0.2s ease all;
+    transition-delay: calc(var(--index) * 0.05s);
+  }
+
+  .input:focus ~ .label .label-char,
+  .input:valid ~ .label .label-char {
+    transform: translateY(-20px);
+    font-size: 14px;
+    color: #5264ae;
+  }
+
+  .bar {
+    position: relative;
+    display: block;
+    width: 100%;
+  }
+
+  .bar:before,
+  .bar:after {
+    content: "";
+    height: 2px;
+    width: 0;
+    bottom: 1px;
+    position: absolute;
+    background: #5264ae;
+    transition: 0.2s ease all;
+  }
+
+  .bar:before {
+    left: 50%;
+  }
+
+  .bar:after {
+    right: 50%;
+  }
+
+  .input:focus ~ .bar:before,
+  .input:focus ~ .bar:after {
+    width: 50%;
+  }
+
+  /* Error State */
+  .error .input {
+    border-bottom: 1px solid red;
+  }
+
+  .error .label-char {
+    color: red !important;
+  }
+
+  .error-text {
+    color: red;
+    font-size: 12px;
+    margin-top: 5px;
+    display: block;
+  }
+`;
 
 export default Input;

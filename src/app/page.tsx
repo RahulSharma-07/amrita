@@ -15,7 +15,8 @@ import {
   Video,
   Stethoscope,
   ChevronRight,
-  ArrowRight
+  ArrowRight,
+  ChevronLeft
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 
@@ -25,45 +26,78 @@ function HeroSlider() {
   const [slides, setSlides] = useState<any[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
+  // Manual slide navigation
+  const goToSlide = (index: number) => {
+    console.log('🖱️ HeroSlider - Manually navigating to slide', index);
+    setCurrentSlide(index);
+  };
+
   const loadSlides = () => {
     try {
       const savedSlides = localStorage.getItem('heroSlides');
-      console.log('Homepage - Loading slides from localStorage:', savedSlides);
+      console.log('💾 HeroSlider - localStorage data:', savedSlides);
+      
       if (savedSlides) {
         const parsed = JSON.parse(savedSlides);
+        console.log('📋 HeroSlider - Parsed data:', parsed);
+        
         if (Array.isArray(parsed) && parsed.length > 0) {
-          console.log('Homepage - Loaded slides:', parsed.length);
-          setSlides(parsed);
+          // Filter only active slides and sort by displayOrder
+          const activeSlides = parsed
+            .filter((slide: any) => slide.status === 'active')
+            .sort((a: any, b: any) => a.displayOrder - b.displayOrder);
+            
+          console.log('✅ HeroSlider - Found', activeSlides.length, 'active slides in localStorage');
+          
+          if (activeSlides.length > 0) {
+            setSlides(activeSlides);
+            setCurrentSlide(0); // Reset to first slide
+          } else {
+            console.log('⚠️ HeroSlider - No active slides found, using defaults');
+            setDefaultSlides();
+          }
         } else {
-          console.log('Homepage - No slides found, using defaults');
+          console.log('⚠️ HeroSlider - Invalid slide data, using defaults');
           setDefaultSlides();
         }
       } else {
-        console.log('Homepage - No localStorage data, using defaults');
+        console.log('⚠️ HeroSlider - No localStorage data found, using defaults');
         setDefaultSlides();
       }
     } catch (error) {
-      console.error('Homepage - Error loading slides:', error);
+      console.error('❌ HeroSlider - Error loading slides:', error);
       setDefaultSlides();
     }
     setIsLoaded(true);
   };
 
   const setDefaultSlides = () => {
-    setSlides([
+    console.log('🏠 HeroSlider - Setting default slides');
+    const defaultSlides = [
       {
-        imageUrl: '',
+        id: 'default-1',
+        imageUrl: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=1200',
         title: 'Welcome to Shree Amrita Academy',
-        subtitle: 'Nurturing Minds, Building Futures',
+        subtitle: 'Nurturing Minds, Building Futures Since 1995',
         buttonText: 'Apply Now',
+        buttonLink: '/admission',
+        displayOrder: 1,
+        status: 'active' as const
       },
       {
-        imageUrl: '',
+        id: 'default-2',
+        imageUrl: 'https://images.unsplash.com/photo-1560253023-3ec5d502959f?w=1200',
         title: 'Admission Open 2026-2027',
         subtitle: 'Enroll Your Child for a Bright Future',
         buttonText: 'Apply Now',
+        buttonLink: '/admission',
+        displayOrder: 2,
+        status: 'active' as const
       },
-    ]);
+    ];
+    setSlides(defaultSlides);
+    setCurrentSlide(0);
+    console.log('✅ HeroSlider - Default slides set:', defaultSlides.length, 'slides');
   };
 
   useEffect(() => {
@@ -103,15 +137,23 @@ function HeroSlider() {
 
   useEffect(() => {
     if (slides.length === 0) return;
+    console.log('⏱️ HeroSlider - Starting auto-rotation with', slides.length, 'slides');
     const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 5000);
-    return () => clearInterval(timer);
+      setCurrentSlide((prev) => {
+        const next = (prev + 1) % slides.length;
+        console.log('⏭️ HeroSlider - Auto-rotating to slide', next);
+        return next;
+      });
+    }, 5000); // Auto-rotate every 5 seconds as per requirements
+    return () => {
+      console.log('⏹️ HeroSlider - Clearing auto-rotation timer');
+      clearInterval(timer);
+    };
   }, [slides.length]);
 
   if (!isLoaded || slides.length === 0) {
     return (
-      <section className="relative h-[600px] overflow-hidden bg-gradient-to-r from-blue-900 to-red-900">
+      <section className="relative h-[600px] overflow-hidden bg-gradient-to-r from-blue-900 to-red-900 md:h-[70vh] lg:h-[80vh]">
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-white text-center">
             <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
@@ -126,10 +168,10 @@ function HeroSlider() {
   }
 
   return (
-    <section className="relative h-[600px] overflow-hidden">
-      {slides.map((slide, index) => (
+    <section className="relative h-[600px] overflow-hidden md:h-[70vh] lg:h-[80vh] xl:h-screen">
+      {slides.map((slide: any, index) => (
         <motion.div
-          key={index}
+          key={slide.id || index}
           initial={{ opacity: 0 }}
           animate={{ opacity: index === currentSlide ? 1 : 0 }}
           transition={{ duration: 1 }}
@@ -169,7 +211,7 @@ function HeroSlider() {
                 {slide.subtitle}
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link href="/admission">
+                <Link href={slide.buttonLink || '/admission'}>
                   <Button size="lg" className="w-full sm:w-auto">
                     {slide.buttonText || 'Apply Now'}
                     <ArrowRight className="ml-2 w-5 h-5" />
@@ -186,6 +228,23 @@ function HeroSlider() {
         </motion.div>
       ))}
       
+      {/* Navigation Arrows */}
+      <button
+        onClick={() => setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length)}
+        className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 bg-white/20 backdrop-blur-sm text-white p-3 rounded-full hover:bg-white/30 transition-all"
+        aria-label="Previous slide"
+      >
+        <ChevronLeft className="w-6 h-6" />
+      </button>
+      
+      <button
+        onClick={() => setCurrentSlide((prev) => (prev + 1) % slides.length)}
+        className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 bg-white/20 backdrop-blur-sm text-white p-3 rounded-full hover:bg-white/30 transition-all"
+        aria-label="Next slide"
+      >
+        <ChevronRight className="w-6 h-6" />
+      </button>
+      
       {/* Slide Indicators */}
       <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2">
         {slides.map((_, index) => (
@@ -195,6 +254,7 @@ function HeroSlider() {
             className={`w-3 h-3 rounded-full transition-all duration-300 ${
               index === currentSlide ? 'bg-white w-8' : 'bg-white/50'
             }`}
+            aria-label={`Go to slide ${index + 1}`}
           />
         ))}
       </div>

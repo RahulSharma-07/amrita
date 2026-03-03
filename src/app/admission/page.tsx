@@ -3,126 +3,60 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, ChevronLeft, Check, Loader2 } from 'lucide-react';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import Select from '@/components/ui/Select';
-
-const steps = [
-  { id: 1, title: 'Student Details' },
-  { id: 2, title: 'Father Details' },
-  { id: 3, title: 'Mother Details' },
-  { id: 4, title: 'Present Address' },
-  { id: 5, title: 'Permanent Address' },
-  { id: 6, title: 'Previous School' },
-  { id: 7, title: 'Payment' },
-];
-
-const classOptions = [
-  { value: 'Nursery', label: 'Nursery' },
-  { value: 'LKG', label: 'LKG' },
-  { value: 'UKG', label: 'UKG' },
-  { value: '1', label: 'Class 1' },
-  { value: '2', label: 'Class 2' },
-  { value: '3', label: 'Class 3' },
-  { value: '4', label: 'Class 4' },
-  { value: '5', label: 'Class 5' },
-  { value: '6', label: 'Class 6' },
-  { value: '7', label: 'Class 7' },
-  { value: '8', label: 'Class 8' },
-  { value: '9', label: 'Class 9' },
-  { value: '10', label: 'Class 10' },
-  { value: '11', label: 'Class 11' },
-  { value: '12', label: 'Class 12' },
-];
-
-const genderOptions = [
-  { value: 'Male', label: 'Male' },
-  { value: 'Female', label: 'Female' },
-  { value: 'Other', label: 'Other' },
-];
-
-const categoryOptions = [
-  { value: 'General', label: 'General' },
-  { value: 'SC', label: 'SC' },
-  { value: 'ST', label: 'ST' },
-  { value: 'OBC', label: 'OBC' },
-  { value: 'EWS', label: 'EWS' },
-];
-
-const religionOptions = [
-  { value: 'Hindu', label: 'Hindu' },
-  { value: 'Muslim', label: 'Muslim' },
-  { value: 'Christian', label: 'Christian' },
-  { value: 'Sikh', label: 'Sikh' },
-  { value: 'Jain', label: 'Jain' },
-  { value: 'Buddhist', label: 'Buddhist' },
-  { value: 'Other', label: 'Other' },
-];
+import { School, User, Users, UploadCloud, Loader2 } from 'lucide-react';
 
 export default function AdmissionPage() {
   const router = useRouter();
-  const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [sameAsPresent, setSameAsPresent] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+
+  const [studentPhoto, setStudentPhoto] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string>('');
+
   const [formData, setFormData] = useState({
     studentDetails: {
       firstName: '',
-      middleName: '',
       lastName: '',
       dateOfBirth: '',
       gender: '',
-      nationality: 'Indian',
+      bloodGroup: '',
       religion: '',
       category: '',
-      bloodGroup: '',
       aadharNumber: '',
       applyingForClass: '',
+      nationality: 'Indian',
     },
     fatherDetails: {
       name: '',
       profession: '',
-      qualification: '',
-      annualIncome: '',
       phone: '',
       email: '',
-      aadharNumber: '',
+      qualification: 'NA',
+      annualIncome: '0',
     },
     motherDetails: {
       name: '',
       profession: '',
-      qualification: '',
-      annualIncome: '',
       phone: '',
       email: '',
-      aadharNumber: '',
+      qualification: 'NA',
+      annualIncome: '0',
     },
     presentAddress: {
-      addressLine1: '',
-      addressLine2: '',
-      city: '',
-      state: '',
-      pincode: '',
+      addressLine1: 'NA',
+      city: 'NA',
+      state: 'NA',
+      pincode: '000000',
       country: 'India',
     },
     permanentAddress: {
-      addressLine1: '',
-      addressLine2: '',
-      city: '',
-      state: '',
-      pincode: '',
+      addressLine1: 'NA',
+      city: 'NA',
+      state: 'NA',
+      pincode: '000000',
       country: 'India',
-    },
-    previousSchoolDetails: {
-      schoolName: '',
-      board: '',
-      classCompleted: '',
-      yearOfPassing: '',
-      percentage: '',
-      address: '',
-    },
+      sameAsPresent: true,
+    }
   });
 
   const handleInputChange = (section: string, field: string, value: string) => {
@@ -135,36 +69,54 @@ export default function AdmissionPage() {
     }));
   };
 
-  const handleSameAsPresentChange = (checked: boolean) => {
-    setSameAsPresent(checked);
-    if (checked) {
-      setFormData((prev) => ({
-        ...prev,
-        permanentAddress: { ...prev.presentAddress },
-      }));
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)) {
+      alert('Only JPG, JPEG, and PNG formats are allowed.');
+      e.target.value = '';
+      return;
     }
+
+    if (file.size > 2 * 1024 * 1024) {
+      alert('File size must be less than 2MB.');
+      e.target.value = '';
+      return;
+    }
+
+    setStudentPhoto(file);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPhotoPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
     if (!agreedToTerms) {
       alert('Please agree to the terms and conditions');
       return;
     }
 
+    if (!studentPhoto) {
+      alert('Please upload a student photo.');
+      return;
+    }
+
     setIsSubmitting(true);
-    
+
     try {
       const formDataToSend = new FormData();
       formDataToSend.append('studentDetails', JSON.stringify(formData.studentDetails));
       formDataToSend.append('fatherDetails', JSON.stringify(formData.fatherDetails));
       formDataToSend.append('motherDetails', JSON.stringify(formData.motherDetails));
       formDataToSend.append('presentAddress', JSON.stringify(formData.presentAddress));
-      formDataToSend.append('permanentAddress', JSON.stringify({
-        ...formData.permanentAddress,
-        sameAsPresent: sameAsPresent,
-      }));
-      formDataToSend.append('previousSchoolDetails', JSON.stringify(formData.previousSchoolDetails));
+      formDataToSend.append('permanentAddress', JSON.stringify(formData.permanentAddress));
       formDataToSend.append('agreedToTerms', 'true');
+      formDataToSend.append('studentPhoto', studentPhoto);
 
       const response = await fetch('/api/admissions', {
         method: 'POST',
@@ -187,482 +139,222 @@ export default function AdmissionPage() {
     }
   };
 
-  const renderStep = () => {
-    switch (currentStep) {
-      case 1:
-        return (
-          <div className="space-y-6">
-            <h3 className="text-xl font-bold text-gray-900 mb-6">Student Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Input
-                label="First Name"
-                required
-                value={formData.studentDetails.firstName}
-                onChange={(e) => handleInputChange('studentDetails', 'firstName', e.target.value)}
-              />
-              <Input
-                label="Middle Name"
-                value={formData.studentDetails.middleName}
-                onChange={(e) => handleInputChange('studentDetails', 'middleName', e.target.value)}
-              />
-              <Input
-                label="Last Name"
-                required
-                value={formData.studentDetails.lastName}
-                onChange={(e) => handleInputChange('studentDetails', 'lastName', e.target.value)}
-              />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Input
-                label="Date of Birth"
-                type="date"
-                required
-                value={formData.studentDetails.dateOfBirth}
-                onChange={(e) => handleInputChange('studentDetails', 'dateOfBirth', e.target.value)}
-              />
-              <Select
-                label="Gender"
-                required
-                options={genderOptions}
-                value={formData.studentDetails.gender}
-                onChange={(e) => handleInputChange('studentDetails', 'gender', e.target.value)}
-              />
-              <Select
-                label="Blood Group"
-                options={[
-                  { value: 'A+', label: 'A+' },
-                  { value: 'A-', label: 'A-' },
-                  { value: 'B+', label: 'B+' },
-                  { value: 'B-', label: 'B-' },
-                  { value: 'AB+', label: 'AB+' },
-                  { value: 'AB-', label: 'AB-' },
-                  { value: 'O+', label: 'O+' },
-                  { value: 'O-', label: 'O-' },
-                ]}
-                value={formData.studentDetails.bloodGroup}
-                onChange={(e) => handleInputChange('studentDetails', 'bloodGroup', e.target.value)}
-              />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Select
-                label="Religion"
-                required
-                options={religionOptions}
-                value={formData.studentDetails.religion}
-                onChange={(e) => handleInputChange('studentDetails', 'religion', e.target.value)}
-              />
-              <Select
-                label="Category"
-                required
-                options={categoryOptions}
-                value={formData.studentDetails.category}
-                onChange={(e) => handleInputChange('studentDetails', 'category', e.target.value)}
-              />
-              <Input
-                label="Aadhar Number"
-                maxLength={12}
-                value={formData.studentDetails.aadharNumber}
-                onChange={(e) => handleInputChange('studentDetails', 'aadharNumber', e.target.value)}
-              />
-            </div>
-            <Select
-              label="Applying For Class"
-              required
-              options={classOptions}
-              value={formData.studentDetails.applyingForClass}
-              onChange={(e) => handleInputChange('studentDetails', 'applyingForClass', e.target.value)}
-            />
-          </div>
-        );
-
-      case 2:
-        return (
-          <div className="space-y-6">
-            <h3 className="text-xl font-bold text-gray-900 mb-6">Father's Details</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Input
-                label="Father's Name"
-                required
-                value={formData.fatherDetails.name}
-                onChange={(e) => handleInputChange('fatherDetails', 'name', e.target.value)}
-              />
-              <Input
-                label="profession"
-                required
-                value={formData.fatherDetails.profession}
-                onChange={(e) => handleInputChange('fatherDetails', 'profession', e.target.value)}
-              />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Input
-                label="Qualification"
-                required
-                value={formData.fatherDetails.qualification}
-                onChange={(e) => handleInputChange('fatherDetails', 'qualification', e.target.value)}
-              />
-              <Input
-                label="Annual Income"
-                type="number"
-                required
-                value={formData.fatherDetails.annualIncome}
-                onChange={(e) => handleInputChange('fatherDetails', 'annualIncome', e.target.value)}
-              />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Input
-                label="Phone Number"
-                required
-                maxLength={10}
-                value={formData.fatherDetails.phone}
-                onChange={(e) => handleInputChange('fatherDetails', 'phone', e.target.value)}
-              />
-              <Input
-                label="Email"
-                type="email"
-                value={formData.fatherDetails.email}
-                onChange={(e) => handleInputChange('fatherDetails', 'email', e.target.value)}
-              />
-            </div>
-            <Input
-              label="Aadhar Number"
-              maxLength={12}
-              value={formData.fatherDetails.aadharNumber}
-              onChange={(e) => handleInputChange('fatherDetails', 'aadharNumber', e.target.value)}
-            />
-          </div>
-        );
-
-      case 3:
-        return (
-          <div className="space-y-6">
-            <h3 className="text-xl font-bold text-gray-900 mb-6">Mother's Details</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Input
-                label="Mother's Name"
-                required
-                value={formData.motherDetails.name}
-                onChange={(e) => handleInputChange('motherDetails', 'name', e.target.value)}
-              />
-              <Input
-                label="profession"
-                required
-                value={formData.motherDetails.profession}
-                onChange={(e) => handleInputChange('motherDetails', 'profession', e.target.value)}
-              />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Input
-                label="Qualification"
-                required
-                value={formData.motherDetails.qualification}
-                onChange={(e) => handleInputChange('motherDetails', 'qualification', e.target.value)}
-              />
-              <Input
-                label="Annual Income"
-                type="number"
-                required
-                value={formData.motherDetails.annualIncome}
-                onChange={(e) => handleInputChange('motherDetails', 'annualIncome', e.target.value)}
-              />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Input
-                label="Phone Number"
-                required
-                maxLength={10}
-                value={formData.motherDetails.phone}
-                onChange={(e) => handleInputChange('motherDetails', 'phone', e.target.value)}
-              />
-              <Input
-                label="Email"
-                type="email"
-                value={formData.motherDetails.email}
-                onChange={(e) => handleInputChange('motherDetails', 'email', e.target.value)}
-              />
-            </div>
-            <Input
-              label="Aadhar Number"
-              maxLength={12}
-              value={formData.motherDetails.aadharNumber}
-              onChange={(e) => handleInputChange('motherDetails', 'aadharNumber', e.target.value)}
-            />
-          </div>
-        );
-
-      case 4:
-        return (
-          <div className="space-y-6">
-            <h3 className="text-xl font-bold text-gray-900 mb-6">Present Address</h3>
-            <Input
-              label="Address Line 1"
-              required
-              value={formData.presentAddress.addressLine1}
-              onChange={(e) => handleInputChange('presentAddress', 'addressLine1', e.target.value)}
-            />
-            <Input
-              label="Address Line 2"
-              value={formData.presentAddress.addressLine2}
-              onChange={(e) => handleInputChange('presentAddress', 'addressLine2', e.target.value)}
-            />
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Input
-                label="City"
-                required
-                value={formData.presentAddress.city}
-                onChange={(e) => handleInputChange('presentAddress', 'city', e.target.value)}
-              />
-              <Input
-                label="State"
-                required
-                value={formData.presentAddress.state}
-                onChange={(e) => handleInputChange('presentAddress', 'state', e.target.value)}
-              />
-              <Input
-                label="Pincode"
-                required
-                maxLength={6}
-                value={formData.presentAddress.pincode}
-                onChange={(e) => handleInputChange('presentAddress', 'pincode', e.target.value)}
-              />
-            </div>
-          </div>
-        );
-
-      case 5:
-        return (
-          <div className="space-y-6">
-            <h3 className="text-xl font-bold text-gray-900 mb-6">Permanent Address</h3>
-            <div className="flex items-center mb-6">
-              <input
-                type="checkbox"
-                id="sameAsPresent"
-                checked={sameAsPresent}
-                onChange={(e) => handleSameAsPresentChange(e.target.checked)}
-                className="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
-              />
-              <label htmlFor="sameAsPresent" className="ml-2 text-gray-700">
-                Same as Present Address
-              </label>
-            </div>
-            <Input
-              label="Address Line 1"
-              required
-              value={formData.permanentAddress.addressLine1}
-              onChange={(e) => handleInputChange('permanentAddress', 'addressLine1', e.target.value)}
-              disabled={sameAsPresent}
-            />
-            <Input
-              label="Address Line 2"
-              value={formData.permanentAddress.addressLine2}
-              onChange={(e) => handleInputChange('permanentAddress', 'addressLine2', e.target.value)}
-              disabled={sameAsPresent}
-            />
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Input
-                label="City"
-                required
-                value={formData.permanentAddress.city}
-                onChange={(e) => handleInputChange('permanentAddress', 'city', e.target.value)}
-                disabled={sameAsPresent}
-              />
-              <Input
-                label="State"
-                required
-                value={formData.permanentAddress.state}
-                onChange={(e) => handleInputChange('permanentAddress', 'state', e.target.value)}
-                disabled={sameAsPresent}
-              />
-              <Input
-                label="Pincode"
-                required
-                maxLength={6}
-                value={formData.permanentAddress.pincode}
-                onChange={(e) => handleInputChange('permanentAddress', 'pincode', e.target.value)}
-                disabled={sameAsPresent}
-              />
-            </div>
-          </div>
-        );
-
-      case 6:
-        return (
-          <div className="space-y-6">
-            <h3 className="text-xl font-bold text-gray-900 mb-6">Previous School Details (Optional)</h3>
-            <Input
-              label="School Name"
-              value={formData.previousSchoolDetails.schoolName}
-              onChange={(e) => handleInputChange('previousSchoolDetails', 'schoolName', e.target.value)}
-            />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Input
-                label="Board"
-                value={formData.previousSchoolDetails.board}
-                onChange={(e) => handleInputChange('previousSchoolDetails', 'board', e.target.value)}
-              />
-              <Input
-                label="Class Completed"
-                value={formData.previousSchoolDetails.classCompleted}
-                onChange={(e) => handleInputChange('previousSchoolDetails', 'classCompleted', e.target.value)}
-              />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Input
-                label="Year of Passing"
-                value={formData.previousSchoolDetails.yearOfPassing}
-                onChange={(e) => handleInputChange('previousSchoolDetails', 'yearOfPassing', e.target.value)}
-              />
-              <Input
-                label="Percentage/Grade"
-                value={formData.previousSchoolDetails.percentage}
-                onChange={(e) => handleInputChange('previousSchoolDetails', 'percentage', e.target.value)}
-              />
-            </div>
-            <Input
-              label="School Address"
-              value={formData.previousSchoolDetails.address}
-              onChange={(e) => handleInputChange('previousSchoolDetails', 'address', e.target.value)}
-            />
-          </div>
-        );
-
-      case 7:
-        return (
-          <div className="space-y-6">
-            <h3 className="text-xl font-bold text-gray-900 mb-6">Payment & Terms</h3>
-            <div className="bg-blue-50 rounded-xl p-6 mb-6">
-              <h4 className="font-bold text-lg mb-4">Registration Fee</h4>
-              <div className="flex justify-between items-center mb-2">
-                <span>Registration Fee</span>
-                <span className="font-bold">₹500</span>
-              </div>
-              <div className="border-t pt-2 flex justify-between items-center text-lg font-bold">
-                <span>Total Amount</span>
-                <span className="text-red-600">₹500</span>
-              </div>
-            </div>
-            
-            <div className="bg-gray-50 rounded-xl p-6 mb-6">
-              <h4 className="font-bold text-lg mb-4">Terms & Conditions</h4>
-              <div className="text-sm text-gray-600 space-y-2 max-h-40 overflow-y-auto">
-                <p>1. The registration fee is non-refundable.</p>
-                <p>2. Submission of the application are guarantee admission.</p>
-                <p>3. All information provided must be accurate and verifiable.</p>
-                <p>4. Original documents must be presented for verification.</p>
-                <p>5. The school reserves the right to accept or reject any application.</p>
-              </div>
-            </div>
-
-            <div className="flex items-start">
-              <input
-                type="checkbox"
-                id="agreeTerms"
-                checked={agreedToTerms}
-                onChange={(e) => setAgreedToTerms(e.target.checked)}
-                className="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500 mt-1"
-              />
-              <label htmlFor="agreeTerms" className="ml-2 text-gray-700">
-                I agree to the <Link href="/terms" className="text-red-600 hover:underline">Terms & Conditions</Link> and{' '}
-                <Link href="/privacy-policy" className="text-red-600 hover:underline">Privacy Policy</Link>
-              </label>
-            </div>
-          </div>
-        );
-
-      default:
-        return null;
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl shadow-xl overflow-hidden"
-        >
-          {/* Header */}
-          <div className="bg-gradient-to-r from-blue-900 to-red-900 px-8 py-6 text-white">
-            <h1 className="text-2xl md:text-3xl font-bold">Online Registration 2026-2027</h1>
-            <p className="mt-2 opacity-90">Shree Amrita Academy - Admission Form</p>
-          </div>
+    <div className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen py-12 px-4 sm:px-6 lg:px-8 font-display">
+      <div className="max-w-[800px] mx-auto">
 
-          {/* Progress Bar */}
-          <div className="px-8 py-6 border-b">
-            <div className="flex items-center justify-between mb-4">
-              {steps.map((step, index) => (
-                <div key={step.id} className="flex items-center">
-                  <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                      currentStep > step.id
-                        ? 'bg-green-500 text-white'
-                        : currentStep === step.id
-                        ? 'bg-red-600 text-white'
-                        : 'bg-gray-200 text-gray-600'
-                    }`}
-                  >
-                    {currentStep > step.id ? <Check className="w-5 h-5" /> : step.id}
-                  </div>
-                  {index < steps.length - 1 && (
-                    <div
-                      className={`w-full h-1 mx-2 ${
-                        currentStep > step.id ? 'bg-green-500' : 'bg-gray-200'
-                      }`}
-                    />
-                  )}
+        {/* Header Text */}
+        <div className="mb-10 text-center">
+          <h1 className="text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-2">Student Admission Form</h1>
+          <p className="text-slate-500 dark:text-slate-400 text-lg">Academic Session 2024-2025 • Priority Admissions</p>
+        </div>
+
+        {/* Form Card */}
+        <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden">
+          <form className="p-4 sm:p-8 space-y-10" onSubmit={handleSubmit}>
+
+            {/* Section: Student Information */}
+            <section>
+              <div className="flex items-center gap-2 mb-6 border-b border-slate-100 dark:border-slate-800 pb-3">
+                <User className="w-6 h-6 text-primary-ui" />
+                <h2 className="text-xl font-bold">Student Information</h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">First Name</label>
+                  <input required value={formData.studentDetails.firstName} onChange={(e) => handleInputChange('studentDetails', 'firstName', e.target.value)} className="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm p-3 focus:ring-2 focus:ring-primary-ui focus:border-primary-ui outline-none" placeholder="First Name" type="text" />
                 </div>
-              ))}
-            </div>
-            <div className="text-center">
-              <span className="text-sm font-medium text-gray-600">
-                Step {currentStep} of {steps.length}: {steps[currentStep - 1].title}
-              </span>
-            </div>
-          </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Last Name</label>
+                  <input required value={formData.studentDetails.lastName} onChange={(e) => handleInputChange('studentDetails', 'lastName', e.target.value)} className="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm p-3 focus:ring-2 focus:ring-primary-ui focus:border-primary-ui outline-none" placeholder="Last Name" type="text" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Date of Birth</label>
+                  <input required value={formData.studentDetails.dateOfBirth} onChange={(e) => handleInputChange('studentDetails', 'dateOfBirth', e.target.value)} className="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm p-3 focus:ring-2 focus:ring-primary-ui focus:border-primary-ui outline-none" type="date" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Gender</label>
+                  <select required value={formData.studentDetails.gender} onChange={(e) => handleInputChange('studentDetails', 'gender', e.target.value)} className="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm p-3 focus:ring-2 focus:ring-primary-ui focus:border-primary-ui outline-none">
+                    <option value="">Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Blood Group</label>
+                  <select value={formData.studentDetails.bloodGroup} onChange={(e) => handleInputChange('studentDetails', 'bloodGroup', e.target.value)} className="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm p-3 focus:ring-2 focus:ring-primary-ui focus:border-primary-ui outline-none">
+                    <option value="">Select Blood Group</option>
+                    <option value="A+">A+</option>
+                    <option value="A-">A-</option>
+                    <option value="B+">B+</option>
+                    <option value="B-">B-</option>
+                    <option value="O+">O+</option>
+                    <option value="O-">O-</option>
+                    <option value="AB+">AB+</option>
+                    <option value="AB-">AB-</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Religion</label>
+                  <input required value={formData.studentDetails.religion} onChange={(e) => handleInputChange('studentDetails', 'religion', e.target.value)} className="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm p-3 focus:ring-2 focus:ring-primary-ui focus:border-primary-ui outline-none" placeholder="Enter religion" type="text" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Category</label>
+                  <select required value={formData.studentDetails.category} onChange={(e) => handleInputChange('studentDetails', 'category', e.target.value)} className="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm p-3 focus:ring-2 focus:ring-primary-ui focus:border-primary-ui outline-none">
+                    <option value="">Select Category</option>
+                    <option value="General">General</option>
+                    <option value="OBC">OBC</option>
+                    <option value="SC">SC</option>
+                    <option value="ST">ST</option>
+                    <option value="EWS">EWS</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Aadhaar / ID Number</label>
+                  <input value={formData.studentDetails.aadharNumber} onChange={(e) => handleInputChange('studentDetails', 'aadharNumber', e.target.value)} className="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm p-3 focus:ring-2 focus:ring-primary-ui focus:border-primary-ui outline-none" placeholder="12-digit Aadhaar number" maxLength={12} type="text" />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Applying for Class</label>
+                  <select required value={formData.studentDetails.applyingForClass} onChange={(e) => handleInputChange('studentDetails', 'applyingForClass', e.target.value)} className="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm p-3 focus:ring-2 focus:ring-primary-ui focus:border-primary-ui outline-none">
+                    <option value="">Select Class</option>
+                    <option value="Nursery">Nursery</option>
+                    <option value="LKG">LKG</option>
+                    <option value="UKG">UKG</option>
+                    <option value="1">Class 1</option>
+                    <option value="2">Class 2</option>
+                    <option value="3">Class 3</option>
+                    <option value="4">Class 4</option>
+                    <option value="5">Class 5</option>
+                    <option value="6">Class 6</option>
+                    <option value="7">Class 7</option>
+                    <option value="8">Class 8</option>
+                    <option value="9">Class 9</option>
+                    <option value="10">Class 10</option>
+                    <option value="11">Class 11</option>
+                    <option value="12">Class 12</option>
+                  </select>
+                </div>
+              </div>
+            </section>
 
-          {/* Form Content */}
-          <div className="px-8 py-8">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={currentStep}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3 }}
-              >
-                {renderStep()}
-              </motion.div>
-            </AnimatePresence>
-          </div>
+            {/* Section: Parent Details */}
+            <section className="space-y-8">
+              <div className="flex items-center gap-2 mb-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+                <Users className="w-6 h-6 text-primary-ui" />
+                <h2 className="text-xl font-bold">Parent Details</h2>
+              </div>
 
-          {/* Navigation Buttons */}
-          <div className="px-8 py-6 border-t bg-gray-50 flex justify-between">
-            <Button
-              variant="outline"
-              onClick={() => setCurrentStep((prev) => Math.max(1, prev - 1))}
-              disabled={currentStep === 1}
-            >
-              <ChevronLeft className="mr-2 w-4 h-4" />
-              Previous
-            </Button>
-            
-            {currentStep < steps.length ? (
-              <Button onClick={() => setCurrentStep((prev) => Math.min(steps.length, prev + 1))}>
-                Next
-                <ChevronRight className="ml-2 w-4 h-4" />
-              </Button>
-            ) : (
-              <Button 
-                onClick={handleSubmit}
-                isLoading={isSubmitting}
-                disabled={!agreedToTerms}
-              >
-                Proceed to Payment
-                <ChevronRight className="ml-2 w-4 h-4" />
-              </Button>
-            )}
+              {/* Father Details */}
+              <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-xl space-y-4 border border-slate-100 dark:border-slate-700">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500">Father's Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold">Full Name</label>
+                    <input required value={formData.fatherDetails.name} onChange={(e) => handleInputChange('fatherDetails', 'name', e.target.value)} className="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm p-3 focus:ring-2 focus:ring-primary-ui focus:border-primary-ui outline-none" type="text" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold">Occupation</label>
+                    <input required value={formData.fatherDetails.profession} onChange={(e) => handleInputChange('fatherDetails', 'profession', e.target.value)} className="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm p-3 focus:ring-2 focus:ring-primary-ui focus:border-primary-ui outline-none" type="text" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold">Phone Number</label>
+                    <input required value={formData.fatherDetails.phone} onChange={(e) => handleInputChange('fatherDetails', 'phone', e.target.value)} className="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm p-3 focus:ring-2 focus:ring-primary-ui focus:border-primary-ui outline-none" type="text" maxLength={10} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold">Email Address</label>
+                    <input value={formData.fatherDetails.email} onChange={(e) => handleInputChange('fatherDetails', 'email', e.target.value)} className="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm p-3 focus:ring-2 focus:ring-primary-ui focus:border-primary-ui outline-none" type="email" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Mother Details */}
+              <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-xl space-y-4 border border-slate-100 dark:border-slate-700">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500">Mother's Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold">Full Name</label>
+                    <input required value={formData.motherDetails.name} onChange={(e) => handleInputChange('motherDetails', 'name', e.target.value)} className="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm p-3 focus:ring-2 focus:ring-primary-ui focus:border-primary-ui outline-none" type="text" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold">Occupation</label>
+                    <input required value={formData.motherDetails.profession} onChange={(e) => handleInputChange('motherDetails', 'profession', e.target.value)} className="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm p-3 focus:ring-2 focus:ring-primary-ui focus:border-primary-ui outline-none" type="text" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold">Phone Number</label>
+                    <input value={formData.motherDetails.phone} onChange={(e) => handleInputChange('motherDetails', 'phone', e.target.value)} className="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm p-3 focus:ring-2 focus:ring-primary-ui focus:border-primary-ui outline-none" type="text" maxLength={10} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold">Email Address</label>
+                    <input value={formData.motherDetails.email} onChange={(e) => handleInputChange('motherDetails', 'email', e.target.value)} className="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm p-3 focus:ring-2 focus:ring-primary-ui focus:border-primary-ui outline-none" type="email" />
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Section: Document Upload */}
+            <section>
+              <div className="flex items-center gap-2 mb-6 border-b border-slate-100 dark:border-slate-800 pb-3">
+                <UploadCloud className="w-6 h-6 text-primary-ui" />
+                <h2 className="text-xl font-bold">Student Photo Upload <span className="text-rose-500">*</span></h2>
+              </div>
+              <div className={`border-2 border-dashed rounded-xl p-10 text-center transition-colors cursor-pointer group bg-slate-50/50 dark:bg-slate-800/30 overflow-hidden relative ${studentPhoto ? 'border-emerald-500' : 'border-slate-300 dark:border-slate-700 hover:border-primary-ui'}`}>
+
+                <input required={!studentPhoto} className="hidden" id="photo-upload" type="file" accept="image/jpeg, image/png, image/jpg" onChange={handlePhotoChange} />
+
+                <label className="cursor-pointer flex flex-col items-center justify-center w-full min-h-[140px]" htmlFor="photo-upload">
+                  {photoPreview ? (
+                    <div className="flex flex-col items-center gap-4">
+                      <img src={photoPreview} alt="Student preview" className="w-24 h-24 object-cover rounded-full border-4 border-emerald-100 shadow-md" />
+                      <p className="text-emerald-600 font-medium">Photo Attached Successfully</p>
+                      <span className="text-indigo-600 text-sm underline group-hover:text-indigo-700">Change Photo</span>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="w-16 h-16 bg-primary-ui/10 rounded-full flex items-center justify-center text-primary-ui mb-4 group-hover:scale-110 transition-transform">
+                        <UploadCloud className="w-8 h-8" />
+                      </div>
+                      <p className="text-lg font-semibold text-slate-900 dark:text-white">Click to upload or drag and drop</p>
+                      <p className="text-sm text-slate-500 mt-1">PNG, JPG or JPEG (max. 2MB)</p>
+                    </>
+                  )}
+                </label>
+              </div>
+            </section>
+
+            {/* Footer Action */}
+            <div className="pt-6 border-t border-slate-100 dark:border-slate-800 space-y-6">
+              <div className="flex items-start gap-3">
+                <input
+                  required
+                  className="mt-1 w-5 h-5 rounded border-slate-300 text-primary-ui focus:ring-primary-ui"
+                  id="terms"
+                  type="checkbox"
+                  checked={agreedToTerms}
+                  onChange={(e) => setAgreedToTerms(e.target.checked)}
+                />
+                <label className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-medium" htmlFor="terms">
+                  I hereby declare that all the information provided above is true and accurate to the best of my knowledge. I understand that any false statement may lead to disqualification.
+                </label>
+              </div>
+
+              <button disabled={isSubmitting || !agreedToTerms} className="w-full flex items-center justify-center gap-2 bg-primary-ui text-white py-4 px-6 rounded-lg text-lg font-bold shadow-lg shadow-primary-ui/30 hover:bg-primary-ui/90 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed" type="submit">
+                {isSubmitting ? <><Loader2 className="w-6 h-6 animate-spin" /> Submitting...</> : 'Submit Admission Form'}
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {/* Footer Small Print */}
+        <footer className="mt-12 pb-12 text-center text-sm text-slate-500">
+          <p>© 2024 EduPrime Academy. All Rights Reserved.</p>
+          <div className="flex justify-center gap-4 mt-2">
+            <Link className="hover:underline" href="/privacy-policy">Privacy Policy</Link>
+            <span>•</span>
+            <Link className="hover:underline" href="/terms-of-service">Terms of Service</Link>
           </div>
-        </motion.div>
+        </footer>
       </div>
     </div>
   );

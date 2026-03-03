@@ -10,13 +10,19 @@ export async function GET(req: NextRequest) {
     
     const slides = await HeroSlider.find({
       isActive: true,
-      $or: [
-        { startDate: { $exists: false } },
-        { startDate: { $lte: now } },
-      ],
-      $or: [
-        { endDate: { $exists: false } },
-        { endDate: { $gte: now } },
+      $and: [
+        {
+          $or: [
+            { startDate: { $exists: false } },
+            { startDate: { $lte: now } },
+          ],
+        },
+        {
+          $or: [
+            { endDate: { $exists: false } },
+            { endDate: { $gte: now } },
+          ],
+        },
       ],
     })
       .sort({ displayOrder: 1 })

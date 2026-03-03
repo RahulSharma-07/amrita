@@ -88,13 +88,13 @@ export default function AdminLoginPage() {
               Initializing...
             </div>
           )}
-          
+
           {initMessage && (
             <div className="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-lg text-sm">
               {initMessage}
             </div>
           )}
-          
+
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
               {error}

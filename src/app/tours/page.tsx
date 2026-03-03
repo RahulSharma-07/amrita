@@ -30,6 +30,23 @@ export default function ToursPage() {
   useEffect(() => {
     const fetchTours = async () => {
       try {
+        // First try to get from localStorage (for admin-added tours)
+        const localTours = localStorage.getItem('tours');
+        if (localTours) {
+          const parsed = JSON.parse(localTours);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            // Filter for upcoming tours
+            const upcomingTours = parsed.filter((tour: Tour) => {
+              const startDate = new Date(tour.startDate);
+              return startDate >= new Date();
+            });
+            setTours(upcomingTours);
+            setIsLoading(false);
+            return;
+          }
+        }
+        
+        // Fallback to API
         const response = await fetch('/api/tours?upcoming=true');
         if (response.ok) {
           const data = await response.json();

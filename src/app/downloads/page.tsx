@@ -32,6 +32,18 @@ export default function DownloadsPage() {
   useEffect(() => {
     const fetchDocuments = async () => {
       try {
+        // First try to get from localStorage (for admin-added documents)
+        const localDocuments = localStorage.getItem('documents');
+        if (localDocuments) {
+          const parsed = JSON.parse(localDocuments);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setDocuments(parsed);
+            setIsLoading(false);
+            return;
+          }
+        }
+        
+        // Fallback to API
         const response = await fetch('/api/documents');
         if (response.ok) {
           const data = await response.json();

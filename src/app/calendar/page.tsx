@@ -27,6 +27,23 @@ export default function CalendarPage() {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
+        // First try to get from localStorage (for admin-added events)
+        const localEvents = localStorage.getItem('calendarEvents');
+        if (localEvents) {
+          const parsed = JSON.parse(localEvents);
+          // Filter events for current month/year
+          const filteredEvents = parsed.filter((event: Event) => {
+            const eventDate = new Date(event.startDate);
+            return eventDate.getMonth() + 1 === currentMonth && eventDate.getFullYear() === currentYear;
+          });
+          if (filteredEvents.length > 0) {
+            setEvents(filteredEvents);
+            setIsLoading(false);
+            return;
+          }
+        }
+        
+        // Fallback to API
         const response = await fetch(`/api/calendar?month=${currentMonth}&year=${currentYear}`);
         if (response.ok) {
           const data = await response.json();

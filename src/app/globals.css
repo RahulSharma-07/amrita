@@ -6,6 +6,9 @@
   --primary: #dc2626;
   --primary-dark: #b91c1c;
   --secondary: #1e40af;
+  --background-light: #f6f6f8;
+  --background-dark: #101622;
+  --primary-ui: #135bec;
 }
 
 @theme inline {
@@ -15,6 +18,9 @@
   --color-primary: var(--primary);
   --color-primary-dark: var(--primary-dark);
   --color-secondary: var(--secondary);
+  --color-background-light: var(--background-light);
+  --color-background-dark: var(--background-dark);
+  --color-primary-ui: var(--primary-ui);
 }
 
 body {

@@ -1,8 +1,7 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Trash2, GripVertical, Save, Image as ImageIcon, ChevronLeft, ChevronRight, Upload, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Plus, Trash2, Save, Eye, Image as ImageIcon, Upload, X, ChevronLeft, ChevronRight, Copy } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 
@@ -13,6 +12,10 @@ interface Slide {
   subtitle: string;
   buttonText: string;
   buttonLink: string;
+  displayOrder: number;
+  status: 'active' | 'inactive';
+  createdAt: string;
+  updatedAt: string;
 }
 
 export default function HeroSliderAdmin() {
@@ -20,31 +23,30 @@ export default function HeroSliderAdmin() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
   const [hasChanges, setHasChanges] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
-  // Load slides from localStorage on mount and when page becomes visible
+  // Load slides from localStorage on mount
   useEffect(() => {
     const loadSlides = () => {
       try {
         const savedSlides = localStorage.getItem('heroSlides');
-        console.log('Admin Slider - Loading slides:', savedSlides ? 'found' : 'not found');
         if (savedSlides) {
           const parsed = JSON.parse(savedSlides);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            // Normalize all slides to ensure they have all required fields
-            const normalizedSlides = parsed.map((slide: any, index: number) =>
-              normalizeSlide({ ...slide, id: slide.id || `slide_${Date.now()}_${index}` })
-            );
+            // Ensure all slides have required fields
+            const normalizedSlides = parsed.map((slide: any) => ({
+              ...slide,
+              displayOrder: slide.displayOrder ?? 0,
+              status: slide.status ?? 'active',
+              createdAt: slide.createdAt ?? new Date().toISOString(),
+              updatedAt: slide.updatedAt ?? new Date().toISOString()
+            }));
             setSlides(normalizedSlides);
-            setActiveSlide(0); // Ensure first slide is selected
-            console.log('Admin Slider - Loaded', normalizedSlides.length, 'slides');
+            setActiveSlide(0);
           } else {
-            console.log('Admin Slider - Empty array, using defaults');
             setDefaultSlides();
           }
         } else {
-          console.log('Admin Slider - No saved data, using defaults');
           setDefaultSlides();
         }
       } catch (error) {
@@ -59,43 +61,18 @@ export default function HeroSliderAdmin() {
     // Listen for storage changes from other tabs/windows
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'heroSlides') {
-        console.log('Admin Slider - Storage changed, reloading');
         loadSlides();
       }
     };
     window.addEventListener('storage', handleStorageChange);
 
-    // Reload when page becomes visible (navigating back to this tab)
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        console.log('Admin Slider - Page visible, reloading slides');
-        loadSlides();
-      }
-    };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    // Also reload on window focus
-    const handleFocus = () => {
-      console.log('Admin Slider - Window focused, reloading slides');
-      loadSlides();
-    };
-    window.addEventListener('focus', handleFocus);
-
     return () => {
       window.removeEventListener('storage', handleStorageChange);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleFocus);
     };
   }, []);
 
-  // Ensure activeSlide is valid when slides change
-  useEffect(() => {
-    if (slides.length > 0 && activeSlide >= slides.length) {
-      setActiveSlide(0);
-    }
-  }, [slides, activeSlide]);
-
   const setDefaultSlides = () => {
+    const now = new Date().toISOString();
     setSlides([
       {
         id: `slide_${Date.now()}_1`,
@@ -104,6 +81,10 @@ export default function HeroSliderAdmin() {
         subtitle: 'Nurturing Minds, Building Futures',
         buttonText: 'Apply Now',
         buttonLink: '/admission',
+        displayOrder: 1,
+        status: 'active',
+        createdAt: now,
+        updatedAt: now
       },
       {
         id: `slide_${Date.now()}_2`,
@@ -112,36 +93,33 @@ export default function HeroSliderAdmin() {
         subtitle: 'Enroll Your Child for a Bright Future',
         buttonText: 'Apply Now',
         buttonLink: '/admission',
+        displayOrder: 2,
+        status: 'active',
+        createdAt: now,
+        updatedAt: now
       },
     ]);
-    setActiveSlide(0); // Set to first slide
+    setActiveSlide(0);
     setHasChanges(true);
   };
-
-  // Ensure all slide fields have default values
-  const normalizeSlide = (slide: any): Slide => ({
-    id: slide.id || `slide_${Date.now()}`,
-    imageUrl: slide.imageUrl || '',
-    title: slide.title || '',
-    subtitle: slide.subtitle || '',
-    buttonText: slide.buttonText || '',
-    buttonLink: slide.buttonLink || '',
-  });
 
   // Save slides to localStorage
   const saveSlides = () => {
     try {
       const slidesJson = JSON.stringify(slides);
+      const sizeInMB = slidesJson.length / (1024 * 1024);
+      
       // Check if data is too large (localStorage limit is typically 5-10MB)
-      if (slidesJson.length > 5 * 1024 * 1024) {
-        alert('Error: Total image size is too large. Please use smaller images or fewer slides.');
+      if (sizeInMB > 5) {
+        alert(`Error: Data size is ${sizeInMB.toFixed(2)}MB. Maximum allowed is 5MB. Please use smaller images or fewer slides.`);
         return;
       }
+      
       localStorage.setItem('heroSlides', slidesJson);
       setHasChanges(false);
       // Dispatch event to notify other components
       window.dispatchEvent(new StorageEvent('storage', { key: 'heroSlides' }));
-      alert('Slides saved successfully!');
+      alert(`Slides saved successfully! (${slides.length} slides, ${sizeInMB.toFixed(2)}MB)`);
     } catch (error) {
       console.error('Error saving slides:', error);
       if (error instanceof Error && error.name === 'QuotaExceededError') {
@@ -154,13 +132,19 @@ export default function HeroSliderAdmin() {
 
   // Add new slide
   const addSlide = () => {
-    const newSlide = normalizeSlide({
+    const now = new Date().toISOString();
+    const newSlide: Slide = {
       id: `slide_${Date.now()}`,
+      imageUrl: '',
       title: 'New Slide',
       subtitle: 'Subtitle here',
       buttonText: 'Learn More',
       buttonLink: '/',
-    });
+      displayOrder: slides.length + 1,
+      status: 'active',
+      createdAt: now,
+      updatedAt: now
+    };
     const newSlides = [...slides, newSlide];
     setSlides(newSlides);
     setActiveSlide(newSlides.length - 1); // Set to the newly added slide
@@ -173,6 +157,10 @@ export default function HeroSliderAdmin() {
       alert('You must have at least one slide');
       return;
     }
+    
+    const result = confirm("Are you sure you want to delete this slider?");
+    if (!result) return;
+    
     const newSlides = slides.filter((_, i) => i !== index);
     setSlides(newSlides);
     if (activeSlide >= newSlides.length) {
@@ -182,63 +170,25 @@ export default function HeroSliderAdmin() {
   };
 
   // Update slide
-  const updateSlide = (index: number, field: keyof Slide, value: string) => {
-    const newSlides = [...slides];
-    newSlides[index] = { ...newSlides[index], [field]: value };
-    setSlides(newSlides);
+  const updateSlide = (index: number, field: keyof Slide, value: string | number | 'active' | 'inactive') => {
+    setSlides((prevSlides) => {
+      const newSlides = [...prevSlides];
+      if (newSlides[index]) {
+        newSlides[index] = { 
+          ...newSlides[index], 
+          [field]: value,
+          updatedAt: new Date().toISOString()
+        };
+      }
+      return newSlides;
+    });
     setHasChanges(true);
   };
 
-  // Handle image upload
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    // Check if a slide is selected
-    if (!slides[activeSlide]) {
-      alert('Please select a slide first');
-      return;
-    }
-
-    // Check file type
-    if (!file.type.startsWith('image/')) {
-      alert('Please select an image file');
-      return;
-    }
-
-    // Check file size (max 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      alert('Image size should be less than 2MB');
-      return;
-    }
-
-    setUploading(true);
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64String = reader.result as string;
-      updateSlide(activeSlide, 'imageUrl', base64String);
-      setUploading(false);
-      // Clear the file input so the same file can be selected again
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    };
-    reader.onerror = () => {
-      alert('Failed to read image file');
-      setUploading(false);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  // Remove image
-  const removeImage = () => {
-    updateSlide(activeSlide, 'imageUrl', '');
-  };
-
-  // Trigger file input click
-  const triggerFileInput = () => {
-    fileInputRef.current?.click();
+  // Toggle slide status
+  const toggleSlideStatus = (index: number) => {
+    const currentStatus = slides[index].status;
+    updateSlide(index, 'status', currentStatus === 'active' ? 'inactive' : 'active');
   };
 
   // Move slide up/down
@@ -249,10 +199,82 @@ export default function HeroSliderAdmin() {
     const newSlides = [...slides];
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
     [newSlides[index], newSlides[targetIndex]] = [newSlides[targetIndex], newSlides[index]];
+    
+    // Update display order to reflect the new position
+    newSlides.forEach((slide, idx) => {
+      slide.displayOrder = idx + 1;
+    });
+    
     setSlides(newSlides);
     setActiveSlide(targetIndex);
     setHasChanges(true);
   };
+
+  // Handle image upload
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file (JPG, PNG, WEBP)');
+      return;
+    }
+
+    // Check file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Image size should be less than 2MB');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      
+      // Update the current active slide with the new image
+      setSlides((prevSlides) => {
+        const newSlides = [...prevSlides];
+        if (newSlides[activeSlide]) {
+          newSlides[activeSlide] = { 
+            ...newSlides[activeSlide], 
+            imageUrl: base64String,
+            updatedAt: new Date().toISOString()
+          };
+        }
+        return newSlides;
+      });
+      setHasChanges(true);
+    };
+    reader.onerror = () => {
+      alert('Failed to read image file');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Remove image
+  const removeImage = () => {
+    setSlides((prevSlides) => {
+      const newSlides = [...prevSlides];
+      if (newSlides[activeSlide]) {
+        newSlides[activeSlide] = { 
+          ...newSlides[activeSlide], 
+          imageUrl: '' ,
+          updatedAt: new Date().toISOString()
+        };
+      }
+      return newSlides;
+    });
+    setHasChanges(true);
+  };
+
+  // Filter slides based on search
+  const filteredSlides = slides.filter((slide) =>
+    slide.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    slide.subtitle.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Sort slides by display order
+  const sortedSlides = [...filteredSlides].sort((a, b) => a.displayOrder - b.displayOrder);
 
   if (!isLoaded) {
     return (
@@ -292,68 +314,130 @@ export default function HeroSliderAdmin() {
             <h2 className="font-semibold text-gray-900">Slides ({slides.length})</h2>
             <Button onClick={addSlide} variant="outline" size="sm" className="flex items-center gap-1">
               <Plus className="w-4 h-4" />
-              Add Slide
+              Add New Slider
             </Button>
           </div>
 
-          <div className="space-y-2">
-            <AnimatePresence>
-              {slides.map((slide, index) => (
-                <motion.div
+          {/* Search */}
+          {slides.length > 5 && (
+            <div className="relative mb-4">
+              <input
+                type="text"
+                placeholder="Search slides..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <svg 
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24" 
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+            </div>
+          )}
+
+          <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
+            {sortedSlides.map((slide, index) => {
+              // Find the original index in the unsorted array
+              const originalIndex = slides.findIndex(s => s.id === slide.id);
+              return (
+                <div
                   key={slide.id}
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
                   className={`p-3 rounded-lg border cursor-pointer transition-colors ${
-                    activeSlide === index
+                    activeSlide === originalIndex
                       ? 'border-blue-500 bg-blue-50'
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
-                  onClick={() => setActiveSlide(index)}
+                  onClick={() => setActiveSlide(originalIndex)}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="text-gray-400 cursor-move">
-                      <GripVertical className="w-4 h-4" />
+                    <div className="text-gray-400">
+                      <span className="text-xs font-medium">{slide.displayOrder}</span>
                     </div>
+                    {slide.imageUrl && (
+                      <img 
+                        src={slide.imageUrl} 
+                        alt="" 
+                        className="w-10 h-10 rounded object-cover"
+                      />
+                    )}
+                    {!slide.imageUrl && (
+                      <div className="w-10 h-10 rounded bg-gray-100 flex items-center justify-center">
+                        <ImageIcon className="w-4 h-4 text-gray-400" />
+                      </div>
+                    )}
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-sm truncate">{slide.title || 'Untitled'}</p>
                       <p className="text-xs text-gray-500 truncate">{slide.subtitle || 'No subtitle'}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${
+                          slide.status === 'active' 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {slide.status}
+                        </span>
+                        <span className="text-xs text-gray-400">
+                          #{slide.displayOrder}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          moveSlide(index, 'up');
-                        }}
-                        disabled={index === 0}
-                        className="p-1 hover:bg-gray-200 rounded disabled:opacity-30"
-                      >
-                        <ChevronLeft className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          moveSlide(index, 'down');
-                        }}
-                        disabled={index === slides.length - 1}
-                        className="p-1 hover:bg-gray-200 rounded disabled:opacity-30"
-                      >
-                        <ChevronRight className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteSlide(index);
-                        }}
-                        className="p-1 hover:bg-red-100 text-red-500 rounded"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                    <div className="flex flex-col gap-1">
+                      <div className="flex gap-1">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            moveSlide(originalIndex, 'up');
+                          }}
+                          disabled={index === 0}
+                          className="p-1 hover:bg-gray-200 rounded disabled:opacity-30"
+                        >
+                          <ChevronLeft className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            moveSlide(originalIndex, 'down');
+                          }}
+                          disabled={index === sortedSlides.length - 1}
+                          className="p-1 hover:bg-gray-200 rounded disabled:opacity-30"
+                        >
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <div className="flex gap-1">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleSlideStatus(originalIndex);
+                          }}
+                          className={`p-1 rounded ${
+                            slide.status === 'active' 
+                              ? 'bg-green-100 text-green-600 hover:bg-green-200' 
+                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          }`}
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteSlide(originalIndex);
+                          }}
+                          className="p-1 hover:bg-red-100 text-red-500 rounded"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
+                </div>
+              )
+            })}
           </div>
 
           {slides.length === 0 && (
@@ -378,16 +462,16 @@ export default function HeroSliderAdmin() {
               <div className="space-y-4">
                 {/* Hidden file input */}
                 <input
-                  ref={fileInputRef}
                   type="file"
                   accept="image/*"
                   onChange={handleImageUpload}
                   className="hidden"
+                  id="image-upload"
                 />
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Slide Image
+                    Slide Image *
                   </label>
 
                   {slides[activeSlide].imageUrl ? (
@@ -412,30 +496,21 @@ export default function HeroSliderAdmin() {
                       </p>
                     </div>
                   ) : (
-                    <div
-                      onClick={triggerFileInput}
+                    <label
+                      htmlFor="image-upload"
                       className="relative h-48 border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 cursor-pointer flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 transition-colors"
                     >
-                      {uploading ? (
-                        <div className="text-center">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500 mx-auto mb-2"></div>
-                          <p className="text-sm text-gray-600">Uploading...</p>
-                        </div>
-                      ) : (
-                        <>
-                          <Upload className="w-10 h-10 text-gray-400 mb-2" />
-                          <p className="text-sm text-gray-600 font-medium">Click to upload image</p>
-                          <p className="text-xs text-gray-500 mt-1">JPG, PNG, GIF up to 2MB</p>
-                          <p className="text-xs text-gray-400 mt-2">Or leave empty for gradient background</p>
-                        </>
-                      )}
-                    </div>
+                      <Upload className="w-10 h-10 text-gray-400 mb-2" />
+                      <p className="text-sm text-gray-600 font-medium">Click to upload image</p>
+                      <p className="text-xs text-gray-500 mt-1">JPG, PNG, WEBP up to 2MB</p>
+                      <p className="text-xs text-gray-400 mt-2">Or leave empty for gradient background</p>
+                    </label>
                   )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Title
+                    Title *
                   </label>
                   <Input
                     value={slides[activeSlide].title || ''}
@@ -475,6 +550,33 @@ export default function HeroSliderAdmin() {
                       onChange={(e) => updateSlide(activeSlide, 'buttonLink', e.target.value)}
                       placeholder="e.g., /admission"
                     />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Display Order
+                    </label>
+                    <Input
+                      type="number"
+                      value={slides[activeSlide].displayOrder}
+                      onChange={(e) => updateSlide(activeSlide, 'displayOrder', parseInt(e.target.value) || 1)}
+                      placeholder="Order number"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Status
+                    </label>
+                    <select
+                      value={slides[activeSlide].status}
+                      onChange={(e) => updateSlide(activeSlide, 'status', e.target.value as 'active' | 'inactive')}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                    </select>
                   </div>
                 </div>
 

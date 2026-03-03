@@ -1,5 +1,4 @@
 import mongoose, { Schema, Document } from 'mongoose';
-import bcrypt from 'bcryptjs';
 
 export type UserRole = 'Admin' | 'Sub Admin' | 'Accountant' | 'Teacher' | 'Staff';
 
@@ -30,19 +29,9 @@ const UserSchema: Schema = new Schema({
   lastLogin: { type: Date },
 }, { timestamps: true });
 
-UserSchema.pre<IUser>('save', async function(next) {
-  if (!this.isModified('password')) return next();
-  
-  try {
-    const salt = await bcrypt.genSalt(12);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-  } catch (error) {
-    next(error as Error);
-  }
-});
-
+// Password hashing is now handled in API routes
 UserSchema.methods.comparePassword = async function(candidatePassword: string): Promise<boolean> {
+  const bcrypt = await import('bcryptjs');
   return bcrypt.compare(candidatePassword, this.password);
 };
 

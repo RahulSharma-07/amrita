@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Loader2, CreditCard, CheckCircle, AlertCircle } from 'lucide-react';
 import Button from '@/components/ui/Button';
 
-export default function PaymentPage() {
+function PaymentContent() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get('orderId');
   const applicationId = searchParams.get('applicationId');
@@ -246,5 +246,20 @@ export default function PaymentPage() {
         </motion.div>
       </div>
     </div>
+  );
+}
+
+export default function PaymentPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 animate-spin text-red-600 mx-auto mb-4" />
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <PaymentContent />
+    </Suspense>
   );
 }

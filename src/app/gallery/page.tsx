@@ -28,6 +28,18 @@ export default function GalleryPage() {
   useEffect(() => {
     const fetchGallery = async () => {
       try {
+        // First try to get from localStorage (for admin-added albums)
+        const localAlbums = localStorage.getItem('galleryAlbums');
+        if (localAlbums) {
+          const parsed = JSON.parse(localAlbums);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setAlbums(parsed);
+            setIsLoading(false);
+            return;
+          }
+        }
+        
+        // Fallback to API
         const response = await fetch('/api/gallery');
         if (response.ok) {
           const data = await response.json();
