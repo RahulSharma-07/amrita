@@ -1,0 +1,9 @@
+@echo off
+echo Killing processes on port 3000...
+taskkill /F /PID 10152 2>nul
+taskkill /F /IM node.exe 2>nul
+timeout /t 2 /nobreak >nul
+echo Removing lock file...
+if exist ".next\dev\lock" del /F /Q ".next\dev\lock"
+echo Starting server...
+npm run dev
