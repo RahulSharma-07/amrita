@@ -513,6 +513,7 @@ export default function HeroSliderAdmin() {
                     Title *
                   </label>
                   <Input
+                    label=""
                     value={slides[activeSlide].title || ''}
                     onChange={(e) => updateSlide(activeSlide, 'title', e.target.value)}
                     placeholder="Enter slide title"
@@ -524,6 +525,7 @@ export default function HeroSliderAdmin() {
                     Subtitle
                   </label>
                   <Input
+                    label=""
                     value={slides[activeSlide].subtitle || ''}
                     onChange={(e) => updateSlide(activeSlide, 'subtitle', e.target.value)}
                     placeholder="Enter slide subtitle"
@@ -536,6 +538,7 @@ export default function HeroSliderAdmin() {
                       Button Text
                     </label>
                     <Input
+                      label=""
                       value={slides[activeSlide].buttonText || ''}
                       onChange={(e) => updateSlide(activeSlide, 'buttonText', e.target.value)}
                       placeholder="e.g., Learn More"
@@ -546,6 +549,7 @@ export default function HeroSliderAdmin() {
                       Button Link
                     </label>
                     <Input
+                      label=""
                       value={slides[activeSlide].buttonLink || ''}
                       onChange={(e) => updateSlide(activeSlide, 'buttonLink', e.target.value)}
                       placeholder="e.g., /admission"
