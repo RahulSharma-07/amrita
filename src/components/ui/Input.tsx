@@ -2,7 +2,8 @@ import React, { InputHTMLAttributes, FC } from "react";
 import styled from "styled-components";
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
-  label: string;
+  // optional label allows placeholder-only inputs (e.g. search fields)
+  label?: string;
   error?: string;
 }
 
@@ -13,13 +14,15 @@ const Input: FC<InputProps> = ({
   required,
   ...props
 }) => {
-  const inputId = id || label.replace(/\s+/g, "-").toLowerCase();
+  // if no explicit id is provided, derive one from label (if available)
+  const inputId = id || (label ? label.replace(/\s+/g, "-").toLowerCase() : undefined);
 
   return (
     <StyledWrapper>
       <div className={`wave-group ${error ? "error" : ""}`}>
         <input
-          id={inputId}
+          // only add id attribute if we have one
+          {...(inputId ? { id: inputId } : {})}
           required={required}
           className="input"
           {...props}
@@ -27,19 +30,22 @@ const Input: FC<InputProps> = ({
 
         <span className="bar" />
 
-        <label htmlFor={inputId} className="label">
-          {label.split("").map((char, index) => (
-            <span
-              key={index}
-              className="label-char"
-              style={
-                { "--index": index } as React.CSSProperties
-              }
-            >
-              {char === " " ? "\u00A0" : char}
-            </span>
-          ))}
-        </label>
+        {/* render floating label only when label prop is provided */}
+        {label && (
+          <label htmlFor={inputId} className="label">
+            {label.split("").map((char, index) => (
+              <span
+                key={index}
+                className="label-char"
+                style={
+                  { "--index": index } as React.CSSProperties
+                }
+              >
+                {char === " " ? "\u00A0" : char}
+              </span>
+            ))}
+          </label>
+        )}
       </div>
 
       {error && <span className="error-text">{error}</span>}

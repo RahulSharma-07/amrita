@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import path from 'path';
+import { mkdir, writeFile } from 'fs/promises';
 import connectDB from '@/lib/db';
 import { Admission, Payment } from '@/models';
 import { admissionFormSchema } from '@/lib/validations';
@@ -66,7 +68,7 @@ export async function POST(req: NextRequest) {
     const files: Record<string, string> = {};
     const fileFields = ['studentPhoto', 'birthCertificate', 'aadharCard', 'previousMarksheet', 'transferCertificate', 'fatherPhoto', 'motherPhoto'];
 
-    const uploadDir = join(process.cwd(), 'public', 'uploads');
+    const uploadDir = path.join(process.cwd(), 'public', 'uploads');
     try {
       await mkdir(uploadDir, { recursive: true });
     } catch (err) {
@@ -80,7 +82,7 @@ export async function POST(req: NextRequest) {
         const buffer = Buffer.from(bytes);
         const fileExt = file.name.split('.').pop() || 'jpg';
         const fileName = `${uniqueApplicationID}_${field}_${Date.now()}.${fileExt}`;
-        const filePath = join(uploadDir, fileName);
+        const filePath = path.join(uploadDir, fileName);
         await writeFile(filePath, buffer);
         files[field] = `/uploads/${fileName}`;
       }
