@@ -240,3 +240,8 @@ export async function GET(req: NextRequest) {
     );
   }
 }
+
+interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+  label: string;    // required
+  error?: string;
+}
