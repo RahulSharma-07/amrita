@@ -25,14 +25,22 @@ export default function Navbar() {
       <div className="bg-blue-900 text-white py-2">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center text-sm">
           <div className="flex items-center space-x-4">
-            <span className="flex items-center">
+            <a 
+              href="tel:+919227780530" 
+              className="flex items-center hover:text-blue-200 transition-colors"
+              aria-label="Call us at +91 92277 80530"
+            >
               <Phone className="w-4 h-4 mr-1" />
               +91 92277 80530
-            </span>
-            <span className="hidden sm:flex items-center">
+            </a>
+            <a 
+              href="mailto:amritaacademy@yahoo.co.in" 
+              className="hidden sm:flex items-center hover:text-blue-200 transition-colors"
+              aria-label="Email us at amritaacademy@yahoo.co.in"
+            >
               <Mail className="w-4 h-4 mr-1" />
               amritaacademy@yahoo.co.in
-            </span>
+            </a>
           </div>
           <div className="text-xs sm:text-sm">
             Managed by Shri Bindheshwari Educational Trust

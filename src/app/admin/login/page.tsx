@@ -16,18 +16,11 @@ export default function AdminLoginPage() {
   const [error, setError] = useState('');
   const [initMessage, setInitMessage] = useState('');
 
-  // Initialize admin user on page load
+  // Initialize database if needed (optional check)
   useEffect(() => {
     const initAdmin = async () => {
       try {
-        const response = await fetch('/api/init');
-        const data = await response.json();
-        if (data.initialized && data.credentials) {
-          setInitMessage(`Admin created. Use: ${data.credentials.email} / ${data.credentials.password}`);
-          // Auto-fill credentials
-          setEmail(data.credentials.email);
-          setPassword(data.credentials.password);
-        }
+        await fetch('/api/init');
       } catch (err) {
         console.error('Init failed:', err);
       } finally {

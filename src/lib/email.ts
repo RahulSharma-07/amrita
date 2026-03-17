@@ -62,10 +62,10 @@ export function generateAdmissionConfirmationEmail(
         
         <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
           <p style="margin: 0;"><strong>Application ID:</strong> ${applicationId}</p>
-          <p style="margin: 10px 0 0 0;"><strong>Status:</strong> Payment Pending</p>
+          <p style="margin: 10px 0 0 0;"><strong>Status:</strong> Under Review</p>
         </div>
         
-        <p>Please complete the payment to finalize your application. Once payment is confirmed, our admissions team will review your application.</p>
+        <p>Our admissions team will review your application. You will be notified via email about the next steps.</p>
         
         <div style="margin: 30px 0; text-align: center;">
           <a href="${process.env.NEXT_PUBLIC_APP_URL}/admission/status? id=${applicationId}" 
@@ -93,51 +93,6 @@ export function generateAdmissionConfirmationEmail(
   return { subject, html };
 }
 
-export function generatePaymentConfirmationEmail(
-  studentName: string,
-  applicationId: string,
-  amount: number,
-  paymentId: string
-): { subject: string; html: string } {
-  const subject = `Payment Received - ${applicationId}`;
-  
-  const html = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <div style="background: linear-gradient(135deg, #1e40af 0%, #dc2626 100%); padding: 30px; text-align: center; color: white;">
-        <h1 style="margin: 0;">Shree Amrita Academy</h1>
-        <p style="margin: 10px 0 0 0;">Managed by Shri Bindheshwari Educational Trust</p>
-      </div>
-      
-      <div style="padding: 30px; background: #ffffff;">
-        <h2 style="color: #16a34a;">Payment Successful!</h2>
-        
-        <p>Dear Parent/Guardian,</p>
-        
-        <p>We have received the payment for the admission application of <strong>${studentName}</strong>.</p>
-        
-        <div style="background: #f0fdf4; border: 1px solid #86efac; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <p style="margin: 0;"><strong>Application ID:</strong> ${applicationId}</p>
-          <p style="margin: 10px 0 0 0;"><strong>Amount Paid:</strong> ₹${amount}</p>
-          <p style="margin: 10px 0 0 0;"><strong>Payment ID:</strong> ${paymentId}</p>
-          <p style="margin: 10px 0 0 0;"><strong>Status:</strong> Under Review</p>
-        </div>
-        
-        <p>Your application is now under review. You will be notified once the admission decision is made.</p>
-        
-        <div style="margin: 30px 0; text-align: center;">
-          <a href="${process.env.NEXT_PUBLIC_APP_URL}/admission/status?id=${applicationId}" 
-             style="background: #1e40af; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block;">
-            View Application Status
-          </a>
-        </div>
-        
-        <p>Thank you for choosing Shree Amrita Academy!</p>
-      </div>
-    </div>
-  `;
-  
-  return { subject, html };
-}
 
 export function generateAdmissionStatusEmail(
   studentName: string,

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+export const dynamic = 'force-dynamic';
 import path from 'path';
 import { mkdir, writeFile } from 'fs/promises';
 import connectDB from '@/lib/db';
-import { Admission, Payment } from '@/models';
+import { Admission } from '@/models';
 import { admissionFormSchema } from '@/lib/validations';
 import { generateApplicationId } from '@/lib/utils';
 import { authenticateRequest, hasPermission, PERMISSIONS } from '@/lib/auth';
@@ -10,13 +11,17 @@ import { authenticateRequest, hasPermission, PERMISSIONS } from '@/lib/auth';
 // Create new admission
 export async function POST(req: NextRequest) {
   try {
-    let dbConnected = false;
+    // Ensure DB is connected
     try {
       await connectDB();
-      dbConnected = true;
-    } catch (dbError) {
-      console.log('MongoDB unavailable, using localStorage fallback for admission');
+    } catch (dbError: any) {
+      console.error('Database connection failed during admission submission:', dbError);
+      return NextResponse.json(
+        { error: 'Database connection failed', details: dbError.message },
+        { status: 503 }
+      );
     }
+    const dbConnected = true;
 
     const formData = await req.formData();
 
@@ -88,16 +93,13 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Generate mock order ID for payment
-    const mockOrderId = 'order_' + Date.now();
-
     // Create admission data object
     const admissionData = {
-      _id: Date.now().toString(),
       uniqueApplicationID,
       studentDetails: {
-        ...data.studentDetails,
-        dateOfBirth: new Date(data.studentDetails.dateOfBirth),
+        ...result.data.studentDetails,
+        dateOfBirth: new Date(result.data.studentDetails.dateOfBirth),
+        academicYear: result.data.studentDetails.academicYear || '2026-2027',
         photo: files.studentPhoto || '',
         birthCertificate: files.birthCertificate || '',
         aadharCard: files.aadharCard || '',
@@ -105,20 +107,23 @@ export async function POST(req: NextRequest) {
         transferCertificate: files.transferCertificate || '',
       },
       fatherDetails: {
-        ...data.fatherDetails,
+        ...result.data.fatherDetails,
+        profession: (result.data.fatherDetails as any).occupation || 'N/A',
+        qualification: result.data.fatherDetails.qualification || 'N/A',
         photo: files.fatherPhoto || '',
       },
       motherDetails: {
-        ...data.motherDetails,
+        ...result.data.motherDetails,
+        profession: (result.data.motherDetails as any).occupation || 'N/A',
+        qualification: result.data.motherDetails.qualification || 'N/A',
         photo: files.motherPhoto || '',
       },
-      presentAddress: data.presentAddress,
-      permanentAddress: data.permanentAddress,
-      previousSchoolDetails: data.previousSchoolDetails,
-      registrationFee: 500,
-      paymentStatus: 'Pending',
+      presentAddress: result.data.presentAddress,
+      permanentAddress: result.data.permanentAddress,
+      previousSchoolDetails: result.data.previousSchoolDetails,
+      registrationFee: 0,
+      paymentStatus: 'Paid',
       applicationStatus: 'Pending',
-      razorpayOrderId: mockOrderId,
       createdAt: new Date().toISOString(),
     };
 
@@ -127,39 +132,19 @@ export async function POST(req: NextRequest) {
       try {
         const admission = new Admission(admissionData);
         await admission.save();
-
-        // Create payment record
-        const payment = new Payment({
-          admissionId: admission._id,
-          amount: 500,
-          currency: 'INR',
-          razorpayOrderId: mockOrderId,
-          status: 'Created',
-          metadata: {
-            studentName: `${data.studentDetails.firstName} ${data.studentDetails.lastName}`,
-            classApplied: data.studentDetails.applyingForClass,
-            parentEmail: data.fatherDetails.email || data.motherDetails.email,
-            parentPhone: data.fatherDetails.phone,
-          },
-        });
-
-        await payment.save();
-      } catch (saveError) {
+      } catch (saveError: any) {
         console.error('Error saving to DB:', saveError);
+        return NextResponse.json(
+          { error: 'Database save failed', details: saveError.message },
+          { status: 500 }
+        );
       }
     }
-
-    // Note: localStorage is not available in server-side API routes
-    // Admissions are stored in memory for this session only
-    // In production with MongoDB, data will persist
 
     return NextResponse.json({
       success: true,
       applicationId: uniqueApplicationID,
-      orderId: mockOrderId,
-      amount: 500, // 500 INR in paise
-      currency: 'INR',
-      keyId: process.env.RAZORPAY_KEY_ID || 'rzp_test_mock',
+      message: 'Admission form submitted successfully',
     }, { status: 201 });
 
   } catch (error) {

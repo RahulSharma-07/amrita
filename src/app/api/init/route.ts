@@ -6,21 +6,27 @@ export async function GET() {
   try {
     await connectDB();
     
-    // Check if admin already exists
-    const existingAdmin = await User.findOne({ email: 'amritaacademy@yahoo.co.in' });
+    const bcrypt = await import('bcryptjs');
+    const hashedPassword = await bcrypt.hash('80530', 10);
     
-    if (existingAdmin) {
+    // Check if admin already exists
+    let admin = await User.findOne({ email: 'amritaacademy@yahoo.co.in' });
+    
+    if (admin) {
+      // Update existing admin password to ensure it's hashed
+      admin.password = hashedPassword;
+      await admin.save();
       return NextResponse.json({ 
-        message: 'Admin user already exists',
+        message: 'Admin password updated and hashed',
         initialized: true 
       });
     }
     
     // Create admin user
-    const admin = new User({
+    admin = new User({
       name: 'Administrator',
       email: 'amritaacademy@yahoo.co.in',
-      password: '80530',
+      password: hashedPassword,
       role: 'Admin',
       permissions: [
         'view_dashboard', 'view_admissions', 'manage_admissions', 'approve_admissions',

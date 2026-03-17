@@ -105,7 +105,7 @@ export default function FeesPage() {
 
   if (!isLoaded) {
     return (
-      <div className="p-8">
+      <div className="space-y-6 text-gray-900">
         <div className="animate-pulse">
           <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
           <div className="h-64 bg-gray-200 rounded"></div>
@@ -115,9 +115,9 @@ export default function FeesPage() {
   }
 
   return (
-    <div className="p-8">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Fee Management</h1>
           <p className="text-gray-600">Manage fee structures for all classes</p>
@@ -174,7 +174,7 @@ export default function FeesPage() {
           <Button onClick={() => setIsModalOpen(true)}>Add First Fee Structure</Button>
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="bg-white rounded-lg shadow overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>

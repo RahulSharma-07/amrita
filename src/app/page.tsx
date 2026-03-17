@@ -3,12 +3,12 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { 
-  GraduationCap, 
-  Users, 
-  BookOpen, 
-  Shield, 
-  Lightbulb, 
+import {
+  GraduationCap,
+  Users,
+  BookOpen,
+  Shield,
+  Lightbulb,
   Heart,
   Bus,
   Utensils,
@@ -19,12 +19,58 @@ import {
   ChevronLeft
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
+import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
 
 // Hero Slider Component
 function HeroSlider() {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [slides, setSlides] = useState<any[]>([]);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const { isConnected } = useRealtimeUpdates();
+
+  // Default slides for immediate server-side rendering
+  const defaultSlides = [
+    {
+      id: 'default-1',
+      imageUrl: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=1200',
+      title: 'Welcome to Shree Amrita Academy',
+      subtitle: 'Nurturing Minds, Building Futures Since 1995',
+      buttonText: 'Apply Now',
+      buttonLink: '/admission',
+      displayOrder: 1,
+      status: 'active' as const
+    },
+    {
+      id: 'default-2',
+      imageUrl: 'https://images.unsplash.com/photo-1560253023-3ec5d502959f?w=1200',
+      title: 'Admission Open 2026-2027',
+      subtitle: 'Enroll Your Child for a Bright Future',
+      buttonText: 'Apply Now',
+      buttonLink: '/admission',
+      displayOrder: 2,
+      status: 'active' as const
+    },
+  ];
+
+  // Initialize with default slides for SSR
+  const [slides, setSlides] = useState(defaultSlides);
+  const [isLoaded, setIsLoaded] = useState(true);
+
+  // Listen for real-time slider updates
+  useEffect(() => {
+    const handleSliderUpdate = (event: CustomEvent) => {
+      console.log('🔄 Slider updated via real-time:', event.detail);
+      loadSlides(); // Reload slides when admin updates them
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('sliderUpdated', handleSliderUpdate as EventListener);
+    }
+
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('sliderUpdated', handleSliderUpdate as EventListener);
+      }
+    };
+  }, []);
 
   // Manual slide navigation
   const goToSlide = (index: number) => {
@@ -32,77 +78,31 @@ function HeroSlider() {
     setCurrentSlide(index);
   };
 
-  const loadSlides = () => {
+  const loadSlides = async () => {
     try {
-      const savedSlides = localStorage.getItem('heroSlides');
-      console.log('💾 HeroSlider - localStorage data:', savedSlides);
-      
-      if (savedSlides) {
-        const parsed = JSON.parse(savedSlides);
-        console.log('📋 HeroSlider - Parsed data:', parsed);
-        
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          // Filter only active slides and sort by displayOrder
-          const activeSlides = parsed
-            .filter((slide: any) => slide.status === 'active')
-            .sort((a: any, b: any) => a.displayOrder - b.displayOrder);
-            
-          console.log('✅ HeroSlider - Found', activeSlides.length, 'active slides in localStorage');
-          
-          if (activeSlides.length > 0) {
-            setSlides(activeSlides);
-            setCurrentSlide(0); // Reset to first slide
-          } else {
-            console.log('⚠️ HeroSlider - No active slides found, using defaults');
-            setDefaultSlides();
-          }
-        } else {
-          console.log('⚠️ HeroSlider - Invalid slide data, using defaults');
-          setDefaultSlides();
+      // Always fetch from backend API - no localStorage fallback
+      const response = await fetch('/api/hero');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data) {
+          console.log('✅ HeroSlider - Loaded slides from backend API:', data.data.length);
+          setSlides(data.data);
+          setCurrentSlide(0);
+          return;
         }
-      } else {
-        console.log('⚠️ HeroSlider - No localStorage data found, using defaults');
-        setDefaultSlides();
       }
-    } catch (error) {
-      console.error('❌ HeroSlider - Error loading slides:', error);
-      setDefaultSlides();
-    }
-    setIsLoaded(true);
-  };
 
-  const setDefaultSlides = () => {
-    console.log('🏠 HeroSlider - Setting default slides');
-    const defaultSlides = [
-      {
-        id: 'default-1',
-        imageUrl: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=1200',
-        title: 'Welcome to Shree Amrita Academy',
-        subtitle: 'Nurturing Minds, Building Futures Since 1995',
-        buttonText: 'Apply Now',
-        buttonLink: '/admission',
-        displayOrder: 1,
-        status: 'active' as const
-      },
-      {
-        id: 'default-2',
-        imageUrl: 'https://images.unsplash.com/photo-1560253023-3ec5d502959f?w=1200',
-        title: 'Admission Open 2026-2027',
-        subtitle: 'Enroll Your Child for a Bright Future',
-        buttonText: 'Apply Now',
-        buttonLink: '/admission',
-        displayOrder: 2,
-        status: 'active' as const
-      },
-    ];
-    setSlides(defaultSlides);
-    setCurrentSlide(0);
-    console.log('✅ HeroSlider - Default slides set:', defaultSlides.length, 'slides');
+      console.warn('⚠️ HeroSlider - Backend API failed, using defaults');
+      // Keep default slides if backend fails
+    } catch (error) {
+      console.warn('⚠️ HeroSlider - Error loading slides:', error);
+      // Keep default slides on error
+    }
   };
 
   useEffect(() => {
     loadSlides();
-    
+
     // Listen for storage changes from other tabs
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'heroSlides') {
@@ -151,22 +151,7 @@ function HeroSlider() {
     };
   }, [slides.length]);
 
-  if (!isLoaded || slides.length === 0) {
-    return (
-      <section className="relative h-[600px] overflow-hidden bg-gradient-to-r from-blue-900 to-red-900 md:h-[70vh] lg:h-[80vh]">
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-white text-center">
-            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl font-bold bg-gradient-to-br from-red-600 to-blue-700 bg-clip-text text-transparent">SAA</span>
-            </div>
-            <h1 className="text-4xl md:text-6xl font-bold mb-4">Welcome to Shree Amrita Academy</h1>
-            <p className="text-xl md:text-2xl opacity-90">Loading...</p>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
+  // Always render content since we have default slides
   return (
     <section className="relative h-[600px] overflow-hidden md:h-[70vh] lg:h-[80vh] xl:h-screen">
       {slides.map((slide: any, index) => (
@@ -177,8 +162,10 @@ function HeroSlider() {
           transition={{ duration: 1 }}
           className="absolute inset-0"
         >
-          <div 
-            className="absolute inset-0"
+          <div
+            className="absolute inset-0 transition-all duration-1000 ease-in-out"
+            role="img"
+            aria-label={`${slide.title || 'Welcome'} - Hero Image`}
             style={{
               backgroundImage: slide.imageUrl ? `url(${slide.imageUrl})` : 'linear-gradient(to right, #1e3a8a, #7f1d1d)',
               backgroundSize: 'cover',
@@ -227,7 +214,7 @@ function HeroSlider() {
           </div>
         </motion.div>
       ))}
-      
+
       {/* Navigation Arrows */}
       <button
         onClick={() => setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length)}
@@ -236,7 +223,7 @@ function HeroSlider() {
       >
         <ChevronLeft className="w-6 h-6" />
       </button>
-      
+
       <button
         onClick={() => setCurrentSlide((prev) => (prev + 1) % slides.length)}
         className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 bg-white/20 backdrop-blur-sm text-white p-3 rounded-full hover:bg-white/30 transition-all"
@@ -244,16 +231,15 @@ function HeroSlider() {
       >
         <ChevronRight className="w-6 h-6" />
       </button>
-      
+
       {/* Slide Indicators */}
       <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2">
         {slides.map((_, index) => (
           <button
             key={index}
             onClick={() => setCurrentSlide(index)}
-            className={`w-3 h-3 rounded-full transition-all duration-300 ${
-              index === currentSlide ? 'bg-white w-8' : 'bg-white/50'
-            }`}
+            className={`w-3 h-3 rounded-full transition-all duration-300 ${index === currentSlide ? 'bg-white w-8' : 'bg-white/50'
+              }`}
             aria-label={`Go to slide ${index + 1}`}
           />
         ))}
@@ -448,7 +434,7 @@ function StatsSection() {
   );
 }
 
-// Main Home Page
+
 export default function HomePage() {
   return (
     <div>

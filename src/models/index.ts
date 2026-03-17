@@ -1,8 +1,6 @@
 export { default as Admission } from './admission';
 export type { IAdmission } from './admission';
 
-export { default as Payment } from './payment';
-export type { IPayment } from './payment';
 
 export { default as User } from './user';
 export type { IUser, UserRole } from './user';

@@ -21,7 +21,8 @@ export const parentDetailsSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   occupation: z.string().optional().or(z.literal('')),
   qualification: z.string().optional().or(z.literal('')),
-  annualIncome: z.union([z.number(), z.string()]).transform((val) => {
+  annualIncome: z.union([z.number(), z.string()]).optional().transform((val) => {
+    if (val === undefined || val === null || val === '') return 0;
     if (typeof val === 'string') {
       const num = parseFloat(val);
       return isNaN(num) ? 0 : num;

@@ -106,7 +106,7 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-2xl font-bold text-gray-900">Dashboard Overview</h1>
         <Link
           href="/admin/admissions"
@@ -132,9 +132,7 @@ export default function AdminDashboard() {
                 <div>
                   <p className="text-sm text-gray-600 mb-1">{card.label}</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {typeof value === 'number' && card.key === 'totalFeesCollected'
-                      ? `₹${value.toLocaleString()}`
-                      : value.toLocaleString()}
+                    {value.toLocaleString()}
                   </p>
                 </div>
                 <div className={`${card.color} p-3 rounded-lg`}>

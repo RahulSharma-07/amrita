@@ -27,7 +27,7 @@ const HeroSliderSchema: Schema = new Schema({
   isActive: { type: Boolean, default: true },
   startDate: { type: Date },
   endDate: { type: Date },
-  createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  createdBy: { type: Schema.Types.ObjectId, ref: 'User' },
 }, { timestamps: true });
 
 HeroSliderSchema.index({ displayOrder: 1 });

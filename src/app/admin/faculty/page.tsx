@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Search, Filter, MoreVertical, Mail, Phone, Edit, Trash2, Save, X, Calendar } from 'lucide-react';
+import { Plus, Search, Filter, MoreVertical, Mail, Phone, Edit, Trash2, Save, X, Calendar, Camera, Upload, User as UserIcon } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 
@@ -16,46 +16,13 @@ interface Faculty {
   experience: string;
   status: 'Active' | 'Inactive';
   joinDate: string;
+  photo?: string;
 }
 
 export default function FacultyPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterSubject, setFilterSubject] = useState('all');
-  const [faculty, setFaculty] = useState<Faculty[]>([
-    {
-      id: '1',
-      name: 'Dr. Rajesh Kumar',
-      email: 'rajesh.kumar@school.com',
-      phone: '9876543210',
-      subject: 'Mathematics',
-      qualification: 'Ph.D. in Mathematics',
-      experience: '15 years',
-      status: 'Active',
-      joinDate: '2019-06-15',
-    },
-    {
-      id: '2',
-      name: 'Mrs. Priya Sharma',
-      email: 'priya.sharma@school.com',
-      phone: '9876543211',
-      subject: 'English',
-      qualification: 'M.A. in English',
-      experience: '10 years',
-      status: 'Active',
-      joinDate: '2020-01-10',
-    },
-    {
-      id: '3',
-      name: 'Mr. Amit Singh',
-      email: 'amit.singh@school.com',
-      phone: '9876543212',
-      subject: 'Science',
-      qualification: 'M.Sc. in Physics',
-      experience: '8 years',
-      status: 'Active',
-      joinDate: '2021-03-20',
-    },
-  ]);
+  const [faculty, setFaculty] = useState<Faculty[]>([]);
   
   const [editingFaculty, setEditingFaculty] = useState<Faculty | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -68,9 +35,23 @@ export default function FacultyPage() {
     experience: '',
     status: 'Active',
     joinDate: new Date().toISOString().split('T')[0],
+    photo: '',
   });
 
   const subjects = ['all', 'Mathematics', 'English', 'Science', 'Hindi', 'Social Studies', 'Computer'];
+
+  // Load from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('faculty');
+    if (saved) {
+      setFaculty(JSON.parse(saved));
+    }
+  }, []);
+
+  // Save to localStorage
+  useEffect(() => {
+    localStorage.setItem('faculty', JSON.stringify(faculty));
+  }, [faculty]);
 
   const filteredFaculty = faculty.filter((f) => {
     const matchesSearch = f.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -128,10 +109,26 @@ export default function FacultyPage() {
     ));
   };
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, isNew: boolean) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        if (isNew) {
+          setNewFaculty({ ...newFaculty, photo: base64String });
+        } else if (editingFaculty) {
+          setEditingFaculty({ ...editingFaculty, photo: base64String });
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   return (
-    <div className="p-8">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Faculty Management</h1>
           <p className="text-gray-600">Manage teachers and staff</p>
@@ -163,7 +160,40 @@ export default function FacultyPage() {
             </button>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Photo Upload */}
+            <div className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 h-full">
+              {newFaculty.photo ? (
+                <div className="relative w-32 h-32 mb-4">
+                  <img src={newFaculty.photo} alt="Preview" className="w-full h-full object-cover rounded-full border-4 border-white shadow-md" />
+                  <button 
+                    onClick={() => setNewFaculty({...newFaculty, photo: ''})}
+                    className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 shadow-sm"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-6 text-gray-500">
+                  <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center mb-2">
+                    <Camera className="w-8 h-8" />
+                  </div>
+                  <p className="text-xs">No Photo</p>
+                </div>
+              )}
+              <label className="cursor-pointer bg-white px-4 py-2 border border-gray-300 rounded-md text-sm font-medium hover:bg-gray-50 flex items-center gap-2">
+                <Upload className="w-4 h-4" />
+                <span>Upload Picture</span>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  onChange={(e) => handleImageUpload(e, true)} 
+                  className="hidden" 
+                />
+              </label>
+            </div>
+
+            <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
               <Input
@@ -233,6 +263,7 @@ export default function FacultyPage() {
               </select>
             </div>
           </div>
+        </div>
           
           <div className="flex justify-end gap-2 mt-4">
             <Button 
@@ -327,8 +358,8 @@ export default function FacultyPage() {
       </div>
 
       {/* Faculty Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="w-full">
+      <div className="bg-white rounded-lg shadow overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -361,9 +392,13 @@ export default function FacultyPage() {
               >
                 <td className="px-6 py-4">
                   <div className="flex items-center">
-                    <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600 font-bold">
-                      {f.name.charAt(0)}
-                    </div>
+                    {f.photo ? (
+                      <img src={f.photo} alt={f.name} className="w-10 h-10 rounded-full object-cover border border-gray-200" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600 font-bold">
+                        {f.name.charAt(0)}
+                      </div>
+                    )}
                     <div className="ml-4">
                       <p className="text-sm font-medium text-gray-900">{f.name}</p>
                       <div className="flex items-center gap-2 text-sm text-gray-500">
@@ -441,7 +476,40 @@ export default function FacultyPage() {
                 </button>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Edit Photo Upload */}
+                <div className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 h-full">
+                  {editingFaculty.photo ? (
+                    <div className="relative w-32 h-32 mb-4">
+                      <img src={editingFaculty.photo} alt="Preview" className="w-full h-full object-cover rounded-full border-4 border-white shadow-md" />
+                      <button 
+                        onClick={() => setEditingFaculty({...editingFaculty, photo: ''})}
+                        className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 shadow-sm"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-6 text-gray-500">
+                      <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center mb-2">
+                        <Camera className="w-8 h-8" />
+                      </div>
+                      <p className="text-xs">No Photo</p>
+                    </div>
+                  )}
+                  <label className="cursor-pointer bg-white px-4 py-2 border border-gray-300 rounded-md text-sm font-medium hover:bg-gray-50 flex items-center gap-2">
+                    <Upload className="w-4 h-4" />
+                    <span>Change Picture</span>
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      onChange={(e) => handleImageUpload(e, false)} 
+                      className="hidden" 
+                    />
+                  </label>
+                </div>
+
+                <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
                   <Input
@@ -511,6 +579,7 @@ export default function FacultyPage() {
                   </select>
                 </div>
               </div>
+            </div>
               
               <div className="flex justify-end gap-2 mt-6">
                 <Button 

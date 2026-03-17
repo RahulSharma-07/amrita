@@ -67,8 +67,6 @@ export interface IAdmission extends Document {
     address?: string;
   };
   paymentStatus: 'Pending' | 'Paid' | 'Failed' | 'Refunded';
-  razorpayOrderId?: string;
-  razorpayPaymentId?: string;
   applicationStatus: 'Pending' | 'Under Review' | 'Approved' | 'Rejected';
   adminRemarks?: string;
   registrationFee: number;
@@ -142,12 +140,10 @@ const AdmissionSchema: Schema = new Schema({
     percentage: { type: String },
     address: { type: String },
   },
-  paymentStatus: { type: String, enum: ['Pending', 'Paid', 'Failed', 'Refunded'], default: 'Pending' },
-  razorpayOrderId: { type: String },
-  razorpayPaymentId: { type: String },
+  paymentStatus: { type: String, enum: ['Pending', 'Paid', 'Failed', 'Refunded'], default: 'Paid' },
   applicationStatus: { type: String, enum: ['Pending', 'Under Review', 'Approved', 'Rejected'], default: 'Pending' },
   adminRemarks: { type: String },
-  registrationFee: { type: Number, default: 500 },
+  registrationFee: { type: Number, default: 0 },
 }, { timestamps: true });
 
 AdmissionSchema.index({ uniqueApplicationID: 1 });

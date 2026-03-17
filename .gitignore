@@ -30,6 +30,16 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# system files
+.DS_Store
+Thumbs.db
+
 # env files (can opt-in for committing if needed)
 .env*
 
@@ -39,3 +49,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local uploads
+/public/uploads/*
+!/public/uploads/.gitkeep
+
+# temp test scripts
+test_admission_api.js
+check_db.js
+verify_db_admission.js
+full_audit.js

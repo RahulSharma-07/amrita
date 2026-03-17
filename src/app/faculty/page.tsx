@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { GraduationCap, Mail, Phone, Play } from 'lucide-react';
+import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
 
 interface Faculty {
   _id: string;
@@ -20,25 +21,26 @@ export default function FacultyPage() {
   const [faculty, setFaculty] = useState<Faculty[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
+  const { isConnected } = useRealtimeUpdates();
 
   useEffect(() => {
     const fetchFaculty = async () => {
       try {
-        // First try to get from localStorage (for admin-added faculty)
-        const localFaculty = localStorage.getItem('faculty');
-        if (localFaculty) {
-          const parsed = JSON.parse(localFaculty);
-          setFaculty(parsed);
-          setIsLoading(false);
-          return;
-        }
-
-        // Fallback to API
+        setIsLoading(true);
+        
+        // Always fetch from backend API - no localStorage fallback
         const response = await fetch('/api/faculty');
         if (response.ok) {
           const data = await response.json();
-          setFaculty(data.faculty);
+          if (data.faculty && Array.isArray(data.faculty)) {
+            console.log('✅ Faculty - Loaded from backend API:', data.faculty.length);
+            setFaculty(data.faculty);
+            setIsLoading(false);
+            return;
+          }
         }
+        
+        console.error('❌ Faculty - Backend API failed');
       } catch (error) {
         console.error('Failed to fetch faculty:', error);
       } finally {
@@ -56,8 +58,23 @@ export default function FacultyPage() {
       }
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    // Listen for real-time faculty updates
+    const handleFacultyUpdate = (event: CustomEvent) => {
+      console.log('🔄 Faculty updated via real-time:', event.detail);
+      fetchFaculty(); // Reload faculty when admin updates them
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('storage', handleStorageChange);
+      window.addEventListener('facultyUpdated', handleFacultyUpdate as EventListener);
+    }
+
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('storage', handleStorageChange);
+        window.removeEventListener('facultyUpdated', handleFacultyUpdate as EventListener);
+      }
+    };
   }, []);
 
   if (isLoading) {

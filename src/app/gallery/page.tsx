@@ -28,22 +28,14 @@ export default function GalleryPage() {
   useEffect(() => {
     const fetchGallery = async () => {
       try {
-        // First try to get from localStorage (for admin-added albums)
-        const localAlbums = localStorage.getItem('galleryAlbums');
-        if (localAlbums) {
-          const parsed = JSON.parse(localAlbums);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setAlbums(parsed);
-            setIsLoading(false);
-            return;
-          }
-        }
-        
-        // Fallback to API
         const response = await fetch('/api/gallery');
         if (response.ok) {
           const data = await response.json();
-          setAlbums(data.albums);
+          if (Array.isArray(data)) {
+            setAlbums(data);
+          } else if (data.albums) {
+            setAlbums(data.albums);
+          }
         }
       } catch (error) {
         console.error('Failed to fetch gallery:', error);
@@ -79,8 +71,13 @@ export default function GalleryPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
+      <div className="min-h-screen bg-gray-50">
+        <div className="bg-gray-200 animate-pulse h-64 w-full mb-12" />
+        <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8">
+          {[1,2,3,4,5,6].map(i => (
+            <div key={i} className="bg-white rounded-2xl h-80 animate-pulse border border-gray-100" />
+          ))}
+        </div>
       </div>
     );
   }
@@ -123,11 +120,12 @@ export default function GalleryPage() {
               >
                 <div className="relative h-64">
                   {album.coverImage || album.images[0]?.url ? (
-                    <img
-                      src={album.coverImage || album.images[0]?.url}
-                      alt={album.albumName}
-                      className="w-full h-full object-cover"
-                    />
+                      <img
+                        src={album.coverImage || album.images[0]?.url}
+                        alt={`${album.albumName} - Shree Amrita Academy Event`}
+                        className="w-full h-full object-cover title-album-img"
+                        loading="lazy"
+                      />
                   ) : (
                     <div className="w-full h-full bg-gray-200 flex items-center justify-center">
                       <span className="text-gray-400">No Image</span>

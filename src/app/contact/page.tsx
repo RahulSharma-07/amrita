@@ -21,12 +21,29 @@ export default function ContactPage() {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate form submission
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    
-    setIsSubmitting(false);
-    setSubmitted(true);
-    setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSubmitted(true);
+        setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
+      } else {
+        alert(data.error || 'Failed to send message. Please try again.');
+      }
+    } catch (error) {
+      console.error('Contact form submission error:', error);
+      alert('An error occurred. Please try again later.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -89,7 +106,13 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <h3 className="font-bold text-gray-900">Phone</h3>
-                    <p className="text-gray-600">+91 92277 80530</p>
+                    <a 
+                      href="tel:+919227780530" 
+                      className="text-gray-600 hover:text-blue-600 transition-colors"
+                      aria-label="Call us at +91 92277 80530"
+                    >
+                      +91 92277 80530
+                    </a>
                   </div>
                 </div>
 
@@ -99,7 +122,13 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <h3 className="font-bold text-gray-900">Email</h3>
-                    <p className="text-gray-600">amritaacademy@yahoo.co.in</p>
+                    <a 
+                      href="mailto:amritaacademy@yahoo.co.in" 
+                      className="text-gray-600 hover:text-green-600 transition-colors"
+                      aria-label="Email us at amritaacademy@yahoo.co.in"
+                    >
+                      amritaacademy@yahoo.co.in
+                    </a>
                   </div>
                 </div>
 

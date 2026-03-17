@@ -44,7 +44,24 @@ export default function AdminLayout({
   const pathname = usePathname();
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<{ name: string; role: string } | null>(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 1024;
+      setIsMobile(mobile);
+      if (!mobile) {
+        setIsSidebarOpen(true);
+      } else {
+        setIsSidebarOpen(false);
+      }
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     // Check authentication
@@ -90,32 +107,38 @@ export default function AdminLayout({
 
   return (
     <div className="min-h-screen bg-gray-100 flex">
+      {/* Mobile Sidebar Overlay */}
+      {isMobile && isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <motion.aside
-        initial={{ x: -300 }}
-        animate={{ x: isSidebarOpen ? 0 : -300 }}
-        className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-gray-900 text-white transition-transform duration-300 ${
-          isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0 lg:w-20'
+      <aside
+        className={`fixed lg:static inset-y-0 left-0 z-50 bg-gray-900 text-white transition-all duration-300 ease-in-out flex flex-col ${
+          isSidebarOpen ? 'w-64 translate-x-0' : '-translate-x-full lg:translate-x-0 lg:w-20'
         }`}
       >
-        <div className="h-full flex flex-col">
+        <div className="h-full flex flex-col w-full overflow-hidden">
           {/* Logo */}
-          <div className="h-16 flex items-center justify-center border-b border-gray-800">
+          <div className="h-16 flex items-center justify-center border-b border-gray-800 shrink-0">
             <div className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-red-600 to-blue-700 rounded-full flex items-center justify-center">
+              <div className="w-10 h-10 bg-gradient-to-br from-red-600 to-blue-700 rounded-full flex items-center justify-center shrink-0">
                 <span className="font-bold text-lg">SAA</span>
               </div>
               {isSidebarOpen && (
-                <div>
-                  <p className="font-bold text-sm">Admin Panel</p>
-                  <p className="text-xs text-gray-400">Shree Amrita Academy</p>
+                <div className="min-w-[120px]">
+                  <p className="font-bold text-sm whitespace-nowrap">Admin Panel</p>
+                  <p className="text-xs text-gray-400 whitespace-nowrap">Shree Amrita Academy</p>
                 </div>
               )}
             </div>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 overflow-y-auto py-4">
+          <nav className="flex-1 overflow-y-auto py-4 scrollbar-thin scrollbar-thumb-gray-700">
             <ul className="space-y-1 px-3">
               {sidebarLinks.map((link) => {
                 const isActive = pathname === link.href;
@@ -123,14 +146,18 @@ export default function AdminLayout({
                   <li key={link.href}>
                     <Link
                       href={link.href}
+                      onClick={() => {
+                        if (isMobile) setIsSidebarOpen(false);
+                      }}
                       className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${
                         isActive
                           ? 'bg-red-600 text-white'
                           : 'text-gray-300 hover:bg-gray-800 hover:text-white'
                       }`}
+                      title={!isSidebarOpen ? link.label : undefined}
                     >
                       <link.icon className="w-5 h-5 flex-shrink-0" />
-                      {isSidebarOpen && <span className="text-sm">{link.label}</span>}
+                      {isSidebarOpen && <span className="text-sm truncate">{link.label}</span>}
                     </Link>
                   </li>
                 );
@@ -139,28 +166,29 @@ export default function AdminLayout({
           </nav>
 
           {/* User Info & Logout */}
-          <div className="border-t border-gray-800 p-4">
+          <div className="border-t border-gray-800 p-4 shrink-0">
             {isSidebarOpen && user && (
-              <div className="mb-4 px-3">
-                <p className="font-medium text-sm">{user.name}</p>
-                <p className="text-xs text-gray-400">{user.role}</p>
+              <div className="mb-4 px-3 overflow-hidden">
+                <p className="font-medium text-sm truncate">{user.name}</p>
+                <p className="text-xs text-gray-400 truncate">{user.role}</p>
               </div>
             )}
             <button
               onClick={handleLogout}
               className="flex items-center space-x-3 px-3 py-2 w-full text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition-colors"
+              title={!isSidebarOpen ? "Logout" : undefined}
             >
-              <LogOut className="w-5 h-5" />
+              <LogOut className="w-5 h-5 flex-shrink-0" />
               {isSidebarOpen && <span className="text-sm">Logout</span>}
             </button>
           </div>
         </div>
-      </motion.aside>
+      </aside>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <header className="h-16 bg-white shadow-sm flex items-center justify-between px-4 lg:px-8">
+        <header className="h-16 bg-white shadow-sm flex items-center justify-between px-4 lg:px-8 shrink-0">
           <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             className="p-2 rounded-lg hover:bg-gray-100 lg:hidden"

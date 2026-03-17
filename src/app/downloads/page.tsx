@@ -32,22 +32,10 @@ export default function DownloadsPage() {
   useEffect(() => {
     const fetchDocuments = async () => {
       try {
-        // First try to get from localStorage (for admin-added documents)
-        const localDocuments = localStorage.getItem('documents');
-        if (localDocuments) {
-          const parsed = JSON.parse(localDocuments);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setDocuments(parsed);
-            setIsLoading(false);
-            return;
-          }
-        }
-        
-        // Fallback to API
         const response = await fetch('/api/documents');
         if (response.ok) {
           const data = await response.json();
-          setDocuments(data.documents);
+          setDocuments(data.documents || []);
         }
       } catch (error) {
         console.error('Failed to fetch documents:', error);
@@ -66,6 +54,7 @@ export default function DownloadsPage() {
     : documents.filter((d) => d.category === selectedCategory);
 
   const formatFileSize = (bytes: number) => {
+    if (!bytes) return '0 B';
     if (bytes < 1024) return bytes + ' B';
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
@@ -73,8 +62,11 @@ export default function DownloadsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
+      <div className="min-h-screen bg-gray-50 uppercase font-black italic">
+        <div className="bg-slate-200 animate-pulse h-64 w-full" />
+        <div className="max-w-7xl mx-auto px-4 py-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+           {[1,2,3,4,5,6].map(i => <div key={i} className="bg-white rounded-3xl h-64 animate-pulse" />)}
+        </div>
       </div>
     );
   }

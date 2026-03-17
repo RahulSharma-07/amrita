@@ -13,44 +13,15 @@ interface Role {
   userCount: number;
 }
 
-const defaultRoles: Role[] = [
-  {
-    id: '1',
-    name: 'Super Admin',
-    description: 'Full access to all features',
-    permissions: ['all'],
-    userCount: 1,
-  },
-  {
-    id: '2',
-    name: 'Admin',
-    description: 'Manage content and users',
-    permissions: ['read', 'write', 'delete'],
-    userCount: 2,
-  },
-  {
-    id: '3',
-    name: 'Editor',
-    description: 'Can edit content only',
-    permissions: ['read', 'write'],
-    userCount: 3,
-  },
-  {
-    id: '4',
-    name: 'Viewer',
-    description: 'Read-only access',
-    permissions: ['read'],
-    userCount: 5,
-  },
-];
+const defaultRoles: Role[] = [];
 
 export default function RolesPage() {
   const [roles] = useState<Role[]>(defaultRoles);
 
   return (
-    <div className="p-8">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Role Management</h1>
           <p className="text-gray-600">Manage user roles and permissions</p>
@@ -105,8 +76,8 @@ export default function RolesPage() {
       </div>
 
       {/* Roles List */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="w-full">
+      <div className="bg-white rounded-lg shadow overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">

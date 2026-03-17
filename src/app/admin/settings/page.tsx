@@ -24,12 +24,12 @@ export default function SettingsPage() {
   const [formData, setFormData] = useState<SchoolSettings>({
     schoolName: 'Shree Amrita Academy',
     email: 'amritaacademy@yahoo.co.in',
-    phone: '+91 80530',
-    address: 'School Address, City, State',
+    phone: '+91 92277 80530',
+    address: '',
     website: '',
     principalName: '',
     establishedYear: '',
-    affiliation: '',
+    affiliation: 'GSHEB',
     schoolTiming: '',
     logo: '',
   });
@@ -76,7 +76,7 @@ export default function SettingsPage() {
 
   if (!isLoaded) {
     return (
-      <div className="p-8">
+      <div className="space-y-6 text-gray-900">
         <div className="animate-pulse">
           <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
           <div className="h-64 bg-gray-200 rounded"></div>
@@ -86,14 +86,14 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="p-8">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
           <p className="text-gray-600">Manage school settings and configuration</p>
         </div>
-        <Button 
+        <Button
           onClick={handleSave}
           className={`flex items-center gap-2 ${saved ? 'bg-green-600 hover:bg-green-700' : ''}`}
         >
@@ -104,8 +104,8 @@ export default function SettingsPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* School Information */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }} 
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="lg:col-span-2 bg-white rounded-lg shadow p-6"
         >
@@ -119,7 +119,7 @@ export default function SettingsPage() {
               <input
                 type="text"
                 value={formData.schoolName}
-                onChange={(e) => setFormData({...formData, schoolName: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, schoolName: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
               />
             </div>
@@ -128,7 +128,7 @@ export default function SettingsPage() {
               <input
                 type="text"
                 value={formData.principalName}
-                onChange={(e) => setFormData({...formData, principalName: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, principalName: e.target.value })}
                 placeholder="Enter principal name"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
               />
@@ -140,7 +140,7 @@ export default function SettingsPage() {
               <input
                 type="email"
                 value={formData.email}
-                onChange={(e) => setFormData({...formData, email: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
               />
             </div>
@@ -151,7 +151,7 @@ export default function SettingsPage() {
               <input
                 type="tel"
                 value={formData.phone}
-                onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
               />
             </div>
@@ -162,7 +162,7 @@ export default function SettingsPage() {
               <input
                 type="url"
                 value={formData.website}
-                onChange={(e) => setFormData({...formData, website: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, website: e.target.value })}
                 placeholder="https://example.com"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
               />
@@ -174,7 +174,7 @@ export default function SettingsPage() {
               <input
                 type="text"
                 value={formData.schoolTiming}
-                onChange={(e) => setFormData({...formData, schoolTiming: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, schoolTiming: e.target.value })}
                 placeholder="e.g., 8:00 AM - 3:00 PM"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
               />
@@ -184,7 +184,7 @@ export default function SettingsPage() {
               <input
                 type="text"
                 value={formData.establishedYear}
-                onChange={(e) => setFormData({...formData, establishedYear: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, establishedYear: e.target.value })}
                 placeholder="e.g., 1995"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
               />
@@ -194,7 +194,7 @@ export default function SettingsPage() {
               <input
                 type="text"
                 value={formData.affiliation}
-                onChange={(e) => setFormData({...formData, affiliation: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, affiliation: e.target.value })}
                 placeholder="e.g., CBSE, State Board"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
               />
@@ -206,7 +206,7 @@ export default function SettingsPage() {
               <textarea
                 rows={3}
                 value={formData.address}
-                onChange={(e) => setFormData({...formData, address: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
               />
             </div>
@@ -215,8 +215,8 @@ export default function SettingsPage() {
 
         {/* Logo & Actions */}
         <div className="space-y-6">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }} 
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
             className="bg-white rounded-lg shadow p-6"
@@ -230,7 +230,7 @@ export default function SettingsPage() {
                 <div className="relative">
                   <img src={formData.logo} alt="School Logo" className="max-h-32 mx-auto rounded-lg" />
                   <button
-                    onClick={() => setFormData({...formData, logo: ''})}
+                    onClick={() => setFormData({ ...formData, logo: '' })}
                     className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -251,8 +251,8 @@ export default function SettingsPage() {
             </div>
           </motion.div>
 
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }} 
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
             className="bg-white rounded-lg shadow p-6"

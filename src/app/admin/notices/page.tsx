@@ -102,7 +102,7 @@ export default function NoticesPage() {
 
   if (!isLoaded) {
     return (
-      <div className="p-8">
+      <div className="space-y-6 text-gray-900">
         <div className="animate-pulse">
           <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
           <div className="h-64 bg-gray-200 rounded"></div>
@@ -127,9 +127,9 @@ export default function NoticesPage() {
   };
 
   return (
-    <div className="p-8">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Notice Management</h1>
           <p className="text-gray-600">Manage school notices and announcements</p>

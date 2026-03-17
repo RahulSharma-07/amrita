@@ -37,24 +37,50 @@ export default function GalleryPage() {
     coverImage: '',
   });
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => {
-    const saved = localStorage.getItem('galleryAlbums');
-    if (saved) setAlbums(JSON.parse(saved));
-    setIsLoaded(true);
-  }, []);
+  const saveAlbums = async (updatedAlbums: GalleryAlbum[]) => {
+    try {
+      const res = await fetch('/api/gallery', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'replace_all', albums: updatedAlbums })
+      });
+      if (!res.ok) throw new Error('Failed to save');
+      const data = await res.json();
+      if (data.success && data.albums) {
+        setAlbums(data.albums);
+      }
+    } catch (err) {
+      console.error('Error saving albums:', err);
+      alert('Failed to save to database');
+    }
+  };
 
   useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem('galleryAlbums', JSON.stringify(albums));
-    }
-  }, [albums, isLoaded]);
+    const fetchAlbums = async () => {
+      try {
+        const res = await fetch('/api/gallery');
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data)) {
+            setAlbums(data);
+          } else if (data.albums) {
+            setAlbums(data.albums);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch albums', err);
+      } finally {
+        setIsLoaded(true);
+      }
+    };
+    fetchAlbums();
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    let newAlbumsList = [...albums];
     if (editingAlbum) {
-      setAlbums(albums.map(a => a._id === editingAlbum._id ? { ...a, ...formData } : a));
-      setEditingAlbum(null);
+      newAlbumsList = albums.map(a => a._id === editingAlbum._id ? { ...a, ...formData } : a);
     } else {
       const newAlbum: GalleryAlbum = {
         _id: uniqueId(),
@@ -62,8 +88,10 @@ export default function GalleryPage() {
         images: formData.coverImage ? [formData.coverImage] : [],
         createdAt: new Date().toISOString(),
       };
-      setAlbums([...albums, newAlbum]);
+      newAlbumsList = [...newAlbumsList, newAlbum];
     }
+    setAlbums(newAlbumsList);
+    saveAlbums(newAlbumsList);
     resetForm();
     setIsModalOpen(false);
   };
@@ -81,7 +109,9 @@ export default function GalleryPage() {
 
   const handleDelete = (id: string) => {
     if (confirm('Are you sure you want to delete this album?')) {
-      setAlbums(albums.filter(a => a._id !== id));
+      const newAlbumsList = albums.filter(a => a._id !== id);
+      setAlbums(newAlbumsList);
+      saveAlbums(newAlbumsList);
     }
   };
 
@@ -108,14 +138,14 @@ export default function GalleryPage() {
 
   const filteredAlbums = albums.filter(album => {
     const matchesSearch = album.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         album.description.toLowerCase().includes(searchTerm.toLowerCase());
+      album.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = filterCategory === 'all' || album.category === filterCategory;
     return matchesSearch && matchesCategory;
   });
 
   if (!isLoaded) {
     return (
-      <div className="p-8">
+      <div className="space-y-6 text-gray-900">
         <div className="animate-pulse">
           <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
           <div className="h-64 bg-gray-200 rounded"></div>
@@ -137,9 +167,9 @@ export default function GalleryPage() {
   };
 
   return (
-    <div className="p-8">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Gallery Management</h1>
           <p className="text-gray-600">Manage photo albums and gallery</p>
@@ -209,9 +239,9 @@ export default function GalleryPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredAlbums.map((album) => (
-            <motion.div 
-              key={album._id} 
-              initial={{ opacity: 0, y: 10 }} 
+            <motion.div
+              key={album._id}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               className="bg-white rounded-lg shadow overflow-hidden hover:shadow-lg transition-shadow"
             >
@@ -243,13 +273,13 @@ export default function GalleryPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Album Name *</label>
-            <input type="text" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500" />
+            <input type="text" required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-            <select 
-              value={formData.category} 
-              onChange={(e) => setFormData({...formData, category: e.target.value as 'Events' | 'Sports' | 'Academic' | 'Cultural' | 'Infrastructure' | 'Others'})} 
+            <select
+              value={formData.category}
+              onChange={(e) => setFormData({ ...formData, category: e.target.value as 'Events' | 'Sports' | 'Academic' | 'Cultural' | 'Infrastructure' | 'Others' })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
             >
               <option value="Events">Events</option>
@@ -262,7 +292,7 @@ export default function GalleryPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-            <textarea rows={3} value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500" />
+            <textarea rows={3} value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Album Cover Image</label>
@@ -272,7 +302,7 @@ export default function GalleryPage() {
                   <img src={formData.coverImage} alt="Preview" className="max-h-48 mx-auto rounded-lg" />
                   <button
                     type="button"
-                    onClick={() => setFormData({...formData, coverImage: ''})}
+                    onClick={() => setFormData({ ...formData, coverImage: '' })}
                     className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
                   >
                     <X className="w-4 h-4" />

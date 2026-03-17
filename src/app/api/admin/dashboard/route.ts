@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+export const dynamic = 'force-dynamic';
 import connectDB from '@/lib/db';
-import { Admission, Payment, Faculty, Student, User } from '@/models';
+import { Admission, Faculty, Student, User } from '@/models';
 import { authenticateRequest, hasPermission, PERMISSIONS } from '@/lib/auth';
 
 export async function GET(req: NextRequest) {
@@ -29,19 +30,14 @@ export async function GET(req: NextRequest) {
       pendingApplications,
       rejectedApplications,
       totalTeachers,
-      totalFees,
       monthlyAdmissions,
     ] = await Promise.all([
       Student.countDocuments({ isActive: true, academicYear }),
-      Admission.countDocuments({ 'studentDetails.academicYear': academicYear }),
-      Admission.countDocuments({ applicationStatus: 'Approved', 'studentDetails.academicYear': academicYear }),
-      Admission.countDocuments({ applicationStatus: { $in: ['Pending', 'Under Review'] }, 'studentDetails.academicYear': academicYear }),
-      Admission.countDocuments({ applicationStatus: 'Rejected', 'studentDetails.academicYear': academicYear }),
+      Admission.countDocuments({}),
+      Admission.countDocuments({ applicationStatus: 'Approved' }),
+      Admission.countDocuments({ applicationStatus: { $in: ['Pending', 'Under Review'] } }),
+      Admission.countDocuments({ applicationStatus: 'Rejected' }),
       Faculty.countDocuments({ isActive: true }),
-      Payment.aggregate([
-        { $match: { status: 'Paid' } },
-        { $group: { _id: null, total: { $sum: '$amount' } } },
-      ]),
       Admission.aggregate([
         {
           $match: {
@@ -63,7 +59,6 @@ export async function GET(req: NextRequest) {
     
     // Get class-wise distribution
     const classDistribution = await Admission.aggregate([
-      { $match: { 'studentDetails.academicYear': academicYear } },
       {
         $group: {
           _id: '$studentDetails.applyingForClass',
@@ -75,7 +70,6 @@ export async function GET(req: NextRequest) {
     
     // Get gender distribution
     const genderDistribution = await Admission.aggregate([
-      { $match: { 'studentDetails.academicYear': academicYear } },
       {
         $group: {
           _id: '$studentDetails.gender',
@@ -98,7 +92,7 @@ export async function GET(req: NextRequest) {
         pendingApplications,
         rejectedApplications,
         totalTeachers,
-        totalFeesCollected: totalFees[0]?.total || 0,
+        totalFeesCollected: 0,
       },
       charts: {
         monthlyAdmissions: monthlyAdmissions.map((item) => ({
