@@ -5,7 +5,9 @@ import Link from 'next/link';
 import { CheckCircle, MapPin, Phone, Home, FileText } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-export default function AdmissionSuccessPage() {
+import { Suspense } from 'react';
+
+function SuccessContent() {
   const searchParams = useSearchParams();
   const applicationId = searchParams.get('applicationId');
 
@@ -84,5 +86,17 @@ export default function AdmissionSuccessPage() {
         </motion.div>
       </div>
     </div>
+  );
+}
+
+export default function AdmissionSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
+      </div>
+    }>
+      <SuccessContent />
+    </Suspense>
   );
 }
