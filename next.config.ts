@@ -1,3 +1,4 @@
+// Next.js configuration for Shree Amrita Academy
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
